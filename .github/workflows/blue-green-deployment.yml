@@ -27,6 +27,13 @@ env:
   GREEN_ENV: green
   PRODUCTION_DOMAIN: phishguard.yourdomain.com
 
+permissions:
+  contents: read
+  packages: write
+  issues: write
+  pull-requests: write
+  actions: read
+
 jobs:
   # Pre-deployment validation
   validate:
@@ -309,29 +316,35 @@ jobs:
       uses: actions/github-script@v7
       with:
         script: |
-          github.rest.issues.create({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            title: '✅ Blue-Green Deployment Successful',
-            body: `## 🎉 Deployment Successful!
-          
-          **Environment**: ${{ needs.determine-environment.outputs.target_env }}
-          **Commit**: ${{ github.sha }}
-          **Deployed by**: ${{ github.actor }}
-          **Timestamp**: ${{ github.event.head_commit.timestamp }}
-          
-          ### Deployment Details:
-          - **Previous Environment**: ${{ needs.determine-environment.outputs.current_env }}
-          - **New Environment**: ${{ needs.determine-environment.outputs.target_env }}
-          - **Zero Downtime**: ✅ Achieved
-          - **Health Checks**: ✅ Passed
-          
-          ### Next Steps:
-          - Monitor application performance
-          - Verify all features are working correctly
-          - Update documentation if needed`,
-            labels: ['deployment', 'success', 'blue-green']
-          })
+          try {
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '✅ Blue-Green Deployment Successful',
+              body: `## 🎉 Deployment Successful!
+            
+            **Environment**: ${{ needs.determine-environment.outputs.target_env }}
+            **Commit**: ${{ github.sha }}
+            **Deployed by**: ${{ github.actor }}
+            **Timestamp**: ${{ github.event.head_commit.timestamp }}
+            
+            ### Deployment Details:
+            - **Previous Environment**: ${{ needs.determine-environment.outputs.current_env }}
+            - **New Environment**: ${{ needs.determine-environment.outputs.target_env }}
+            - **Zero Downtime**: ✅ Achieved
+            - **Health Checks**: ✅ Passed
+            
+            ### Next Steps:
+            - Monitor application performance
+            - Verify all features are working correctly
+            - Update documentation if needed`,
+              labels: ['deployment', 'success', 'blue-green']
+            });
+            console.log('✅ Deployment success issue created');
+          } catch (error) {
+            console.log('⚠️ Could not create GitHub issue:', error.message);
+            console.log('✅ Deployment completed successfully regardless');
+          }
     
     - name: Send success notification
       run: |
@@ -349,31 +362,37 @@ jobs:
       uses: actions/github-script@v7
       with:
         script: |
-          github.rest.issues.create({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            title: '❌ Blue-Green Deployment Failed',
-            body: `## 🚨 Deployment Failed!
-          
-          **Commit**: ${{ github.sha }}
-          **Failed by**: ${{ github.actor }}
-          **Timestamp**: ${{ github.event.head_commit.timestamp }}
-          
-          ### Failure Details:
-          - **Workflow**: ${{ github.workflow }}
-          - **Job**: ${{ github.job }}
-          - **Step**: ${{ github.step }}
-          
-          ### Immediate Actions Required:
-          1. **Investigate the failure**
-          2. **Check application logs**
-          3. **Verify infrastructure status**
-          4. **Consider manual rollback if needed**
-          
-          ### Rollback Instructions:
-          If rollback is needed, manually switch traffic back to the previous environment.`,
-            labels: ['deployment', 'failure', 'urgent']
-          })
+          try {
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '❌ Blue-Green Deployment Failed',
+              body: `## 🚨 Deployment Failed!
+            
+            **Commit**: ${{ github.sha }}
+            **Failed by**: ${{ github.actor }}
+            **Timestamp**: ${{ github.event.head_commit.timestamp }}
+            
+            ### Failure Details:
+            - **Workflow**: ${{ github.workflow }}
+            - **Job**: ${{ github.job }}
+            - **Step**: ${{ github.step }}
+            
+            ### Immediate Actions Required:
+            1. **Investigate the failure**
+            2. **Check application logs**
+            3. **Verify infrastructure status**
+            4. **Consider manual rollback if needed**
+            
+            ### Rollback Instructions:
+            If rollback is needed, manually switch traffic back to the previous environment.`,
+              labels: ['deployment', 'failure', 'urgent']
+            });
+            console.log('❌ Deployment failure issue created');
+          } catch (error) {
+            console.log('⚠️ Could not create GitHub issue:', error.message);
+            console.log('❌ Deployment failed - manual investigation required');
+          }
     
     - name: Send failure notification
       run: |

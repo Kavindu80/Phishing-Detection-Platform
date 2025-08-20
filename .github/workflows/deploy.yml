@@ -12,6 +12,13 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: kavindu80/phishing-detection-platform
 
+permissions:
+  contents: read
+  packages: write
+  issues: write
+  pull-requests: write
+  actions: read
+
 jobs:
   # Build and Push Docker Images
   build-and-push:

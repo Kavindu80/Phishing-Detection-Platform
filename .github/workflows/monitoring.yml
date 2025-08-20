@@ -12,6 +12,12 @@ env:
   SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
   EMAIL_NOTIFICATIONS: ${{ secrets.EMAIL_NOTIFICATIONS }}
 
+permissions:
+  contents: read
+  actions: read
+  issues: write
+  pull-requests: write
+
 jobs:
   # Monitor workflow status
   monitor-workflows:
@@ -200,41 +206,47 @@ jobs:
       uses: actions/github-script@v7
       with:
         script: |
-          const title = '${{ env.DEPLOYMENT_FAILED }}' === 'true' ? 
-            '🚨 Critical: Deployment Failure' : 
-            '🚨 Critical: Production Environment Unhealthy';
-          
-          const body = `## Critical Alert
-          
-          **Type**: ${{ env.DEPLOYMENT_FAILED == 'true' && 'Deployment Failure' || 'Production Health Issue' }}
-          **Timestamp**: ${new Date().toISOString()}
-          **Repository**: ${{ github.repository }}
-          **Workflow**: ${{ github.workflow }}
-          
-          ### Immediate Actions Required:
-          1. **Investigate the root cause**
-          2. **Check application logs**
-          3. **Verify infrastructure status**
-          4. **Consider rollback if necessary**
-          
-          ### Status:
-          - Deployment Status: ${{ env.DEPLOYMENT_FAILED == 'true' && '❌ Failed' || '✅ Success' }}
-          - Production Health: ${{ env.PRODUCTION_UNHEALTHY == 'true' && '❌ Unhealthy' || '✅ Healthy' }}
-          
-          ### Next Steps:
-          - [ ] Root cause analysis
-          - [ ] Fix the issue
-          - [ ] Deploy fix
-          - [ ] Verify resolution
-          - [ ] Update monitoring thresholds if needed`;
-          
-          await github.rest.issues.create({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            title: title,
-            body: body,
-            labels: ['critical', 'alert', 'urgent']
-          });
+          try {
+            const title = '${{ env.DEPLOYMENT_FAILED }}' === 'true' ? 
+              '🚨 Critical: Deployment Failure' : 
+              '🚨 Critical: Production Environment Unhealthy';
+            
+            const body = `## Critical Alert
+            
+            **Type**: ${{ env.DEPLOYMENT_FAILED == 'true' && 'Deployment Failure' || 'Production Health Issue' }}
+            **Timestamp**: ${new Date().toISOString()}
+            **Repository**: ${{ github.repository }}
+            **Workflow**: ${{ github.workflow }}
+            
+            ### Immediate Actions Required:
+            1. **Investigate the root cause**
+            2. **Check application logs**
+            3. **Verify infrastructure status**
+            4. **Consider rollback if necessary**
+            
+            ### Status:
+            - Deployment Status: ${{ env.DEPLOYMENT_FAILED == 'true' && '❌ Failed' || '✅ Success' }}
+            - Production Health: ${{ env.PRODUCTION_UNHEALTHY == 'true' && '❌ Unhealthy' || '✅ Healthy' }}
+            
+            ### Next Steps:
+            - [ ] Root cause analysis
+            - [ ] Fix the issue
+            - [ ] Deploy fix
+            - [ ] Verify resolution
+            - [ ] Update monitoring thresholds if needed`;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['critical', 'alert', 'urgent']
+            });
+            console.log('🚨 Critical issue created');
+          } catch (error) {
+            console.log('⚠️ Could not create GitHub issue:', error.message);
+            console.log('🚨 Critical alert detected - manual investigation required');
+          }
 
   # Generate monitoring report
   generate-report:

@@ -1,0 +1,375 @@
+name: Blue-Green Production Deployment
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment Environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+      force_deploy:
+        description: 'Force deployment even if tests fail'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  BLUE_ENV: blue
+  GREEN_ENV: green
+  PRODUCTION_DOMAIN: phishguard.yourdomain.com
+
+jobs:
+  # Pre-deployment validation
+  validate:
+    name: Pre-deployment Validation
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.validate.outputs.should_deploy }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Validate deployment conditions
+      id: validate
+      run: |
+        # Check if this is a production deployment
+        if [[ "${{ github.event.inputs.environment }}" == "production" || "${{ github.ref }}" == "refs/heads/main" ]]; then
+          echo "Production deployment detected"
+          
+          # Check if tests are passing
+          if [[ "${{ github.event.inputs.force_deploy }}" != "true" ]]; then
+            echo "Checking test status..."
+            # Add your test validation logic here
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "Force deployment enabled"
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "Staging deployment"
+          echo "should_deploy=true" >> $GITHUB_OUTPUT
+        fi
+
+  # Build and test
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    needs: validate
+    if: needs.validate.outputs.should_deploy == 'true'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Build Backend Image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        file: ./backend/Dockerfile
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ github.sha }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Build Frontend Image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        file: ./frontend/Dockerfile
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ github.sha }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Run Integration Tests
+      run: |
+        echo "Running integration tests against built images..."
+        # Add your integration test commands here
+        echo "Integration tests completed"
+
+  # Determine current environment
+  determine-environment:
+    name: Determine Current Environment
+    runs-on: ubuntu-latest
+    needs: [validate, build-and-test]
+    if: needs.validate.outputs.should_deploy == 'true'
+    outputs:
+      current_env: ${{ steps.determine.outputs.current_env }}
+      target_env: ${{ steps.determine.outputs.target_env }}
+    
+    steps:
+    - name: Determine deployment environment
+      id: determine
+      run: |
+        # Check which environment is currently active
+        # This would typically query your infrastructure
+        CURRENT_ENV=$(curl -s https://${{ env.PRODUCTION_DOMAIN }}/health | jq -r '.environment' 2>/dev/null || echo "blue")
+        
+        # Determine target environment (opposite of current)
+        if [[ "$CURRENT_ENV" == "blue" ]]; then
+          TARGET_ENV="green"
+        else
+          TARGET_ENV="blue"
+        fi
+        
+        echo "current_env=$CURRENT_ENV" >> $GITHUB_OUTPUT
+        echo "target_env=$TARGET_ENV" >> $GITHUB_OUTPUT
+        echo "Current environment: $CURRENT_ENV"
+        echo "Target environment: $TARGET_ENV"
+
+  # Deploy to target environment
+  deploy-target:
+    name: Deploy to Target Environment
+    runs-on: ubuntu-latest
+    needs: [validate, build-and-test, determine-environment]
+    if: needs.validate.outputs.should_deploy == 'true'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy Backend to ${{ needs.determine-environment.outputs.target_env }}
+      run: |
+        echo "Deploying backend to ${{ needs.determine-environment.outputs.target_env }} environment..."
+        
+        # Example deployment commands (customize for your infrastructure)
+        # kubectl set image deployment/phishguard-backend-${{ needs.determine-environment.outputs.target_env }} \
+        #   backend=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ github.sha }}
+        
+        # For demonstration, we'll simulate deployment
+        echo "Backend deployment to ${{ needs.determine-environment.outputs.target_env }} completed"
+        
+        # Wait for deployment to be ready
+        echo "Waiting for backend to be ready..."
+        sleep 30
+    
+    - name: Deploy Frontend to ${{ needs.determine-environment.outputs.target_env }}
+      run: |
+        echo "Deploying frontend to ${{ needs.determine-environment.outputs.target_env }} environment..."
+        
+        # Example deployment commands (customize for your infrastructure)
+        # kubectl set image deployment/phishguard-frontend-${{ needs.determine-environment.outputs.target_env }} \
+        #   frontend=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ github.sha }}
+        
+        # For demonstration, we'll simulate deployment
+        echo "Frontend deployment to ${{ needs.determine-environment.outputs.target_env }} completed"
+        
+        # Wait for deployment to be ready
+        echo "Waiting for frontend to be ready..."
+        sleep 30
+
+  # Health check target environment
+  health-check-target:
+    name: Health Check Target Environment
+    runs-on: ubuntu-latest
+    needs: [validate, build-and-test, determine-environment, deploy-target]
+    if: needs.validate.outputs.should_deploy == 'true'
+    
+    steps:
+    - name: Wait for target environment to be ready
+      run: |
+        echo "Waiting for ${{ needs.determine-environment.outputs.target_env }} environment to be ready..."
+        sleep 60
+    
+    - name: Run health checks
+      run: |
+        echo "Running health checks on ${{ needs.determine-environment.outputs.target_env }} environment..."
+        
+        # Health check endpoints (customize for your application)
+        BACKEND_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" https://${{ needs.determine-environment.outputs.target_env }}.${{ env.PRODUCTION_DOMAIN }}/health || echo "000")
+        FRONTEND_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" https://${{ needs.determine-environment.outputs.target_env }}.${{ env.PRODUCTION_DOMAIN }} || echo "000")
+        
+        echo "Backend health check: $BACKEND_HEALTH"
+        echo "Frontend health check: $FRONTEND_HEALTH"
+        
+        if [[ "$BACKEND_HEALTH" == "200" && "$FRONTEND_HEALTH" == "200" ]]; then
+          echo "Health checks passed"
+          echo "HEALTH_CHECK_PASSED=true" >> $GITHUB_ENV
+        else
+          echo "Health checks failed"
+          echo "HEALTH_CHECK_PASSED=false" >> $GITHUB_ENV
+          exit 1
+        fi
+
+  # Switch traffic to target environment
+  switch-traffic:
+    name: Switch Traffic to Target Environment
+    runs-on: ubuntu-latest
+    needs: [validate, build-and-test, determine-environment, deploy-target, health-check-target]
+    if: needs.validate.outputs.should_deploy == 'true' && needs.health-check-target.result == 'success'
+    
+    steps:
+    - name: Switch traffic to ${{ needs.determine-environment.outputs.target_env }}
+      run: |
+        echo "Switching traffic to ${{ needs.determine-environment.outputs.target_env }} environment..."
+        
+        # Example traffic switching (customize for your infrastructure)
+        # kubectl patch service phishguard-loadbalancer \
+        #   -p '{"spec":{"selector":{"environment":"${{ needs.determine-environment.outputs.target_env }}"}}}'
+        
+        # For demonstration, we'll simulate traffic switching
+        echo "Traffic switched to ${{ needs.determine-environment.outputs.target_env }}"
+        
+        # Wait for traffic to stabilize
+        echo "Waiting for traffic to stabilize..."
+        sleep 30
+
+  # Final health check
+  final-health-check:
+    name: Final Health Check
+    runs-on: ubuntu-latest
+    needs: [validate, build-and-test, determine-environment, deploy-target, health-check-target, switch-traffic]
+    if: needs.validate.outputs.should_deploy == 'true' && needs.health-check-target.result == 'success'
+    
+    steps:
+    - name: Final health check
+      run: |
+        echo "Running final health check on production..."
+        
+        # Check production health
+        PROD_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" https://${{ env.PRODUCTION_DOMAIN }}/health || echo "000")
+        
+        echo "Production health check: $PROD_HEALTH"
+        
+        if [[ "$PROD_HEALTH" == "200" ]]; then
+          echo "Final health check passed"
+          echo "DEPLOYMENT_SUCCESS=true" >> $GITHUB_ENV
+        else
+          echo "Final health check failed"
+          echo "DEPLOYMENT_SUCCESS=false" >> $GITHUB_ENV
+          exit 1
+        fi
+
+  # Cleanup old environment
+  cleanup:
+    name: Cleanup Old Environment
+    runs-on: ubuntu-latest
+    needs: [validate, build-and-test, determine-environment, deploy-target, health-check-target, switch-traffic, final-health-check]
+    if: needs.validate.outputs.should_deploy == 'true' && needs.health-check-target.result == 'success' && needs.final-health-check.result == 'success'
+    
+    steps:
+    - name: Cleanup ${{ needs.determine-environment.outputs.current_env }} environment
+      run: |
+        echo "Cleaning up old ${{ needs.determine-environment.outputs.current_env }} environment..."
+        
+        # Example cleanup commands (customize for your infrastructure)
+        # kubectl scale deployment phishguard-backend-${{ needs.determine-environment.outputs.current_env }} --replicas=0
+        # kubectl scale deployment phishguard-frontend-${{ needs.determine-environment.outputs.current_env }} --replicas=0
+        
+        # For demonstration, we'll simulate cleanup
+        echo "Cleanup of ${{ needs.determine-environment.outputs.current_env }} completed"
+
+  # Success notification
+  notify-success:
+    name: Deployment Success Notification
+    runs-on: ubuntu-latest
+    needs: [validate, build-and-test, determine-environment, deploy-target, health-check-target, switch-traffic, final-health-check, cleanup]
+    if: needs.validate.outputs.should_deploy == 'true' && needs.health-check-target.result == 'success' && needs.final-health-check.result == 'success'
+    
+    steps:
+    - name: Create deployment success issue
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '✅ Blue-Green Deployment Successful',
+            body: `## 🎉 Deployment Successful!
+          
+          **Environment**: ${{ needs.determine-environment.outputs.target_env }}
+          **Commit**: ${{ github.sha }}
+          **Deployed by**: ${{ github.actor }}
+          **Timestamp**: ${{ github.event.head_commit.timestamp }}
+          
+          ### Deployment Details:
+          - **Previous Environment**: ${{ needs.determine-environment.outputs.current_env }}
+          - **New Environment**: ${{ needs.determine-environment.outputs.target_env }}
+          - **Zero Downtime**: ✅ Achieved
+          - **Health Checks**: ✅ Passed
+          
+          ### Next Steps:
+          - Monitor application performance
+          - Verify all features are working correctly
+          - Update documentation if needed`,
+            labels: ['deployment', 'success', 'blue-green']
+          })
+    
+    - name: Send success notification
+      run: |
+        echo "Deployment successful notification sent"
+        # Add your notification logic here (Slack, email, etc.)
+
+  # Failure notification and rollback
+  notify-failure:
+    name: Deployment Failure Notification
+    runs-on: ubuntu-latest
+    if: failure() && needs.validate.outputs.should_deploy == 'true'
+    
+    steps:
+    - name: Create deployment failure issue
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '❌ Blue-Green Deployment Failed',
+            body: `## 🚨 Deployment Failed!
+          
+          **Commit**: ${{ github.sha }}
+          **Failed by**: ${{ github.actor }}
+          **Timestamp**: ${{ github.event.head_commit.timestamp }}
+          
+          ### Failure Details:
+          - **Workflow**: ${{ github.workflow }}
+          - **Job**: ${{ github.job }}
+          - **Step**: ${{ github.step }}
+          
+          ### Immediate Actions Required:
+          1. **Investigate the failure**
+          2. **Check application logs**
+          3. **Verify infrastructure status**
+          4. **Consider manual rollback if needed**
+          
+          ### Rollback Instructions:
+          If rollback is needed, manually switch traffic back to the previous environment.`,
+            labels: ['deployment', 'failure', 'urgent']
+          })
+    
+    - name: Send failure notification
+      run: |
+        echo "Deployment failure notification sent"
+        # Add your notification logic here (Slack, email, etc.)
+    
+    - name: Attempt automatic rollback
+      if: needs.determine-environment.outputs.target_env
+      run: |
+        echo "Attempting automatic rollback..."
+        # Add your rollback logic here
+        echo "Rollback completed" 

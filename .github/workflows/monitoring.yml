@@ -1,0 +1,291 @@
+name: Monitoring and Alerting
+
+on:
+  workflow_run:
+    workflows: ["CI/CD Pipeline", "Blue-Green Production Deployment", "Code Quality", "Security Scan"]
+    types: [completed]
+  schedule:
+    - cron: '*/15 * * * *'  # Run every 15 minutes
+  workflow_dispatch:
+
+env:
+  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+  EMAIL_NOTIFICATIONS: ${{ secrets.EMAIL_NOTIFICATIONS }}
+
+jobs:
+  # Monitor workflow status
+  monitor-workflows:
+    name: Monitor Workflow Status
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Get workflow status
+      id: workflow-status
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: workflows } = await github.rest.actions.listWorkflowRunsForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            per_page: 10
+          });
+          
+          const failedWorkflows = workflows.workflow_runs.filter(run => 
+            run.conclusion === 'failure' && 
+            new Date(run.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
+          );
+          
+          const successWorkflows = workflows.workflow_runs.filter(run => 
+            run.conclusion === 'success' && 
+            new Date(run.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
+          );
+          
+          console.log(`Failed workflows in last 24h: ${failedWorkflows.length}`);
+          console.log(`Successful workflows in last 24h: ${successWorkflows.length}`);
+          
+          return {
+            failed_count: failedWorkflows.length,
+            success_count: successWorkflows.length,
+            failure_rate: failedWorkflows.length / (failedWorkflows.length + successWorkflows.length) * 100
+          };
+    
+    - name: Check failure rate
+      id: failure-check
+      run: |
+        FAILURE_RATE=${{ steps.workflow-status.outputs.failure_rate }}
+        FAILED_COUNT=${{ steps.workflow-status.outputs.failed_count }}
+        
+        echo "Failure rate: ${FAILURE_RATE}%"
+        echo "Failed workflows: ${FAILED_COUNT}"
+        
+        # Alert if failure rate is high
+        if (( $(echo "$FAILURE_RATE > 20" | bc -l) )); then
+          echo "HIGH_FAILURE_RATE=true" >> $GITHUB_ENV
+          echo "⚠️ High failure rate detected: ${FAILURE_RATE}%"
+        fi
+        
+        # Alert if multiple failures
+        if [ "$FAILED_COUNT" -gt 3 ]; then
+          echo "MULTIPLE_FAILURES=true" >> $GITHUB_ENV
+          echo "🚨 Multiple failures detected: ${FAILED_COUNT}"
+        fi
+
+  # Monitor deployment health
+  monitor-deployment-health:
+    name: Monitor Deployment Health
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'failure' || github.event.workflow_run.conclusion == 'success'
+    
+    steps:
+    - name: Check deployment status
+      id: deployment-check
+      run: |
+        # Check if this was a deployment workflow
+        if [[ "${{ github.event.workflow_run.name }}" == *"Deployment"* ]]; then
+          echo "DEPLOYMENT_WORKFLOW=true" >> $GITHUB_ENV
+          
+          if [[ "${{ github.event.workflow_run.conclusion }}" == "failure" ]]; then
+            echo "DEPLOYMENT_FAILED=true" >> $GITHUB_ENV
+            echo "🚨 Deployment failed!"
+          else
+            echo "DEPLOYMENT_SUCCESS=true" >> $GITHUB_ENV
+            echo "✅ Deployment successful!"
+          fi
+        fi
+    
+    - name: Check production health
+      if: env.DEPLOYMENT_WORKFLOW == 'true'
+      run: |
+        echo "Checking production health..."
+        
+        # Health check endpoints
+        BACKEND_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" https://phishguard.yourdomain.com/health || echo "000")
+        FRONTEND_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" https://phishguard.yourdomain.com || echo "000")
+        
+        echo "Backend health: $BACKEND_HEALTH"
+        echo "Frontend health: $FRONTEND_HEALTH"
+        
+        if [[ "$BACKEND_HEALTH" != "200" || "$FRONTEND_HEALTH" != "200" ]]; then
+          echo "PRODUCTION_UNHEALTHY=true" >> $GITHUB_ENV
+          echo "🚨 Production environment is unhealthy!"
+        else
+          echo "PRODUCTION_HEALTHY=true" >> $GITHUB_ENV
+          echo "✅ Production environment is healthy!"
+        fi
+
+  # Performance monitoring
+  monitor-performance:
+    name: Monitor Performance
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check response times
+      run: |
+        echo "Checking application response times..."
+        
+        # Measure response times
+        BACKEND_RESPONSE_TIME=$(curl -s -w "%{time_total}" -o /dev/null https://phishguard.yourdomain.com/health || echo "10.0")
+        FRONTEND_RESPONSE_TIME=$(curl -s -w "%{time_total}" -o /dev/null https://phishguard.yourdomain.com || echo "10.0")
+        
+        echo "Backend response time: ${BACKEND_RESPONSE_TIME}s"
+        echo "Frontend response time: ${FRONTEND_RESPONSE_TIME}s"
+        
+        # Alert if response times are slow
+        if (( $(echo "$BACKEND_RESPONSE_TIME > 5" | bc -l) )); then
+          echo "SLOW_BACKEND=true" >> $GITHUB_ENV
+          echo "⚠️ Backend response time is slow: ${BACKEND_RESPONSE_TIME}s"
+        fi
+        
+        if (( $(echo "$FRONTEND_RESPONSE_TIME > 3" | bc -l) )); then
+          echo "SLOW_FRONTEND=true" >> $GITHUB_ENV
+          echo "⚠️ Frontend response time is slow: ${FRONTEND_RESPONSE_TIME}s"
+        fi
+
+  # Send alerts
+  send-alerts:
+    name: Send Alerts
+    runs-on: ubuntu-latest
+    needs: [monitor-workflows, monitor-deployment-health, monitor-performance]
+    if: always()
+    
+    steps:
+    - name: Send Slack notification
+      if: env.HIGH_FAILURE_RATE == 'true' || env.MULTIPLE_FAILURES == 'true' || env.DEPLOYMENT_FAILED == 'true' || env.PRODUCTION_UNHEALTHY == 'true' || env.SLOW_BACKEND == 'true' || env.SLOW_FRONTEND == 'true'
+      run: |
+        echo "Sending Slack notification..."
+        
+        # Prepare message
+        MESSAGE="🚨 *PhishGuard Alert*\n\n"
+        
+        if [[ "${{ env.HIGH_FAILURE_RATE }}" == "true" ]]; then
+          MESSAGE+="• High workflow failure rate detected\n"
+        fi
+        
+        if [[ "${{ env.MULTIPLE_FAILURES }}" == "true" ]]; then
+          MESSAGE+="• Multiple workflow failures detected\n"
+        fi
+        
+        if [[ "${{ env.DEPLOYMENT_FAILED }}" == "true" ]]; then
+          MESSAGE+="• Deployment failed\n"
+        fi
+        
+        if [[ "${{ env.PRODUCTION_UNHEALTHY }}" == "true" ]]; then
+          MESSAGE+="• Production environment is unhealthy\n"
+        fi
+        
+        if [[ "${{ env.SLOW_BACKEND }}" == "true" ]]; then
+          MESSAGE+="• Backend response time is slow\n"
+        fi
+        
+        if [[ "${{ env.SLOW_FRONTEND }}" == "true" ]]; then
+          MESSAGE+="• Frontend response time is slow\n"
+        fi
+        
+        MESSAGE+="\n*Repository*: ${{ github.repository }}"
+        MESSAGE+="\n*Workflow*: ${{ github.workflow }}"
+        MESSAGE+="\n*Commit*: ${{ github.sha }}"
+        
+        # Send to Slack
+        if [[ -n "${{ env.SLACK_WEBHOOK }}" ]]; then
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"$MESSAGE\"}" \
+            "${{ env.SLACK_WEBHOOK }}"
+        fi
+    
+    - name: Create GitHub issue for critical failures
+      if: env.DEPLOYMENT_FAILED == 'true' || env.PRODUCTION_UNHEALTHY == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const title = '${{ env.DEPLOYMENT_FAILED }}' === 'true' ? 
+            '🚨 Critical: Deployment Failure' : 
+            '🚨 Critical: Production Environment Unhealthy';
+          
+          const body = `## Critical Alert
+          
+          **Type**: ${{ env.DEPLOYMENT_FAILED == 'true' && 'Deployment Failure' || 'Production Health Issue' }}
+          **Timestamp**: ${new Date().toISOString()}
+          **Repository**: ${{ github.repository }}
+          **Workflow**: ${{ github.workflow }}
+          
+          ### Immediate Actions Required:
+          1. **Investigate the root cause**
+          2. **Check application logs**
+          3. **Verify infrastructure status**
+          4. **Consider rollback if necessary**
+          
+          ### Status:
+          - Deployment Status: ${{ env.DEPLOYMENT_FAILED == 'true' && '❌ Failed' || '✅ Success' }}
+          - Production Health: ${{ env.PRODUCTION_UNHEALTHY == 'true' && '❌ Unhealthy' || '✅ Healthy' }}
+          
+          ### Next Steps:
+          - [ ] Root cause analysis
+          - [ ] Fix the issue
+          - [ ] Deploy fix
+          - [ ] Verify resolution
+          - [ ] Update monitoring thresholds if needed`;
+          
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: title,
+            body: body,
+            labels: ['critical', 'alert', 'urgent']
+          });
+
+  # Generate monitoring report
+  generate-report:
+    name: Generate Monitoring Report
+    runs-on: ubuntu-latest
+    needs: [monitor-workflows, monitor-deployment-health, monitor-performance]
+    if: always()
+    
+    steps:
+    - name: Generate daily report
+      run: |
+        echo "Generating monitoring report..."
+        
+        # Create report
+        REPORT="## 📊 PhishGuard Monitoring Report
+        
+        **Date**: $(date)
+        **Repository**: ${{ github.repository }}
+        
+        ### Workflow Status (Last 24h):
+        - **Total Workflows**: $(( ${{ needs.monitor-workflows.outputs.failed_count }} + ${{ needs.monitor-workflows.outputs.success_count }} ))
+        - **Successful**: ${{ needs.monitor-workflows.outputs.success_count }}
+        - **Failed**: ${{ needs.monitor-workflows.outputs.failed_count }}
+        - **Success Rate**: $(( 100 - ${{ needs.monitor-workflows.outputs.failure_rate }} ))% 
+        
+        ### Deployment Status:
+        - **Last Deployment**: ${{ needs.monitor-deployment-health.outputs.deployment_status || 'N/A' }}
+        - **Production Health**: ${{ needs.monitor-deployment-health.outputs.production_health || 'N/A' }}
+        
+        ### Performance Metrics:
+        - **Backend Response Time**: ${{ needs.monitor-performance.outputs.backend_response_time || 'N/A' }}s
+        - **Frontend Response Time**: ${{ needs.monitor-performance.outputs.frontend_response_time || 'N/A' }}s
+        
+        ### Alerts Triggered:
+        - **High Failure Rate**: ${{ env.HIGH_FAILURE_RATE == 'true' && 'Yes' || 'No' }}
+        - **Multiple Failures**: ${{ env.MULTIPLE_FAILURES == 'true' && 'Yes' || 'No' }}
+        - **Deployment Failed**: ${{ env.DEPLOYMENT_FAILED == 'true' && 'Yes' || 'No' }}
+        - **Production Unhealthy**: ${{ env.PRODUCTION_UNHEALTHY == 'true' && 'Yes' || 'No' }}
+        - **Slow Backend**: ${{ env.SLOW_BACKEND == 'true' && 'Yes' || 'No' }}
+        - **Slow Frontend**: ${{ env.SLOW_FRONTEND == 'true' && 'Yes' || 'No' }}
+        
+        ### Recommendations:
+        - Monitor failure patterns
+        - Review performance bottlenecks
+        - Update alerting thresholds if needed
+        - Consider infrastructure improvements"
+        
+        echo "$REPORT" > monitoring-report.md
+    
+    - name: Upload monitoring report
+      uses: actions/upload-artifact@v4
+      with:
+        name: monitoring-report
+        path: monitoring-report.md 

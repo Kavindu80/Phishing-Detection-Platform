@@ -1,0 +1,438 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: phishguard
+  labels:
+    name: phishguard
+---
+# Blue Environment Backend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phishguard-backend-blue
+  namespace: phishguard
+  labels:
+    app: phishguard-backend
+    environment: blue
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: phishguard-backend
+      environment: blue
+  template:
+    metadata:
+      labels:
+        app: phishguard-backend
+        environment: blue
+        version: v1
+    spec:
+      containers:
+      - name: backend
+        image: ghcr.io/kavindu80/phishing-detection-platform-backend:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: FLASK_ENV
+          value: "production"
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: phishguard-secrets
+              key: mongo-uri
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: phishguard-secrets
+              key: jwt-secret
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: phishguard-secrets
+              key: gemini-api-key
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+---
+# Green Environment Backend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phishguard-backend-green
+  namespace: phishguard
+  labels:
+    app: phishguard-backend
+    environment: green
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: phishguard-backend
+      environment: green
+  template:
+    metadata:
+      labels:
+        app: phishguard-backend
+        environment: green
+        version: v1
+    spec:
+      containers:
+      - name: backend
+        image: ghcr.io/kavindu80/phishing-detection-platform-backend:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: FLASK_ENV
+          value: "production"
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: phishguard-secrets
+              key: mongo-uri
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: phishguard-secrets
+              key: jwt-secret
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: phishguard-secrets
+              key: gemini-api-key
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+---
+# Blue Environment Frontend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phishguard-frontend-blue
+  namespace: phishguard
+  labels:
+    app: phishguard-frontend
+    environment: blue
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: phishguard-frontend
+      environment: blue
+  template:
+    metadata:
+      labels:
+        app: phishguard-frontend
+        environment: blue
+        version: v1
+    spec:
+      containers:
+      - name: frontend
+        image: ghcr.io/kavindu80/phishing-detection-platform-frontend:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+---
+# Green Environment Frontend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phishguard-frontend-green
+  namespace: phishguard
+  labels:
+    app: phishguard-frontend
+    environment: green
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: phishguard-frontend
+      environment: green
+  template:
+    metadata:
+      labels:
+        app: phishguard-frontend
+        environment: green
+        version: v1
+    spec:
+      containers:
+      - name: frontend
+        image: ghcr.io/kavindu80/phishing-detection-platform-frontend:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+---
+# Blue Environment Backend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: phishguard-backend-blue
+  namespace: phishguard
+  labels:
+    app: phishguard-backend
+    environment: blue
+spec:
+  selector:
+    app: phishguard-backend
+    environment: blue
+  ports:
+  - port: 80
+    targetPort: 5000
+    protocol: TCP
+  type: ClusterIP
+---
+# Green Environment Backend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: phishguard-backend-green
+  namespace: phishguard
+  labels:
+    app: phishguard-backend
+    environment: green
+spec:
+  selector:
+    app: phishguard-backend
+    environment: green
+  ports:
+  - port: 80
+    targetPort: 5000
+    protocol: TCP
+  type: ClusterIP
+---
+# Blue Environment Frontend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: phishguard-frontend-blue
+  namespace: phishguard
+  labels:
+    app: phishguard-frontend
+    environment: blue
+spec:
+  selector:
+    app: phishguard-frontend
+    environment: blue
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+  type: ClusterIP
+---
+# Green Environment Frontend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: phishguard-frontend-green
+  namespace: phishguard
+  labels:
+    app: phishguard-frontend
+    environment: green
+spec:
+  selector:
+    app: phishguard-frontend
+    environment: green
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+  type: ClusterIP
+---
+# Main Load Balancer Service (Routes to active environment)
+apiVersion: v1
+kind: Service
+metadata:
+  name: phishguard-loadbalancer
+  namespace: phishguard
+  labels:
+    app: phishguard
+spec:
+  selector:
+    app: phishguard-frontend
+    environment: blue  # Default to blue environment
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 80
+    protocol: TCP
+  type: LoadBalancer
+---
+# Ingress for external access
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: phishguard-ingress
+  namespace: phishguard
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - phishguard.yourdomain.com
+    secretName: phishguard-tls
+  rules:
+  - host: phishguard.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: phishguard-loadbalancer
+            port:
+              number: 80
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: phishguard-loadbalancer
+            port:
+              number: 80
+---
+# Horizontal Pod Autoscaler for Backend
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: phishguard-backend-hpa
+  namespace: phishguard
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: phishguard-backend-blue  # Will be updated during blue-green switch
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+---
+# Horizontal Pod Autoscaler for Frontend
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: phishguard-frontend-hpa
+  namespace: phishguard
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: phishguard-frontend-blue  # Will be updated during blue-green switch
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80 

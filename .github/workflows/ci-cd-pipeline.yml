@@ -40,7 +40,7 @@ jobs:
         python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Cache Python dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
@@ -114,7 +114,7 @@ jobs:
       run: npm run build
 
     - name: Upload frontend build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: frontend-build
         path: frontend/dist/
@@ -154,7 +154,7 @@ jobs:
         done
 
     - name: Upload extension artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: chrome-extension
         path: chrome-extension/
@@ -191,7 +191,7 @@ jobs:
         npm audit --audit-level=moderate --json > npm-audit.json || echo "npm audit completed with warnings"
 
     - name: Upload security reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: security-reports
         path: |
@@ -266,13 +266,13 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
 
     - name: Download frontend artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: frontend-build
         path: frontend/dist/
 
     - name: Download extension artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: chrome-extension
         path: chrome-extension/
@@ -287,7 +287,7 @@ jobs:
         cp LICENSE deployment/
 
     - name: Upload deployment package
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: deployment-package
         path: deployment/
@@ -393,7 +393,7 @@ jobs:
         sphinx-build -b html docs/source docs/build/html || echo "Documentation build completed with warnings"
 
     - name: Upload documentation
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: api-documentation
         path: backend/docs/build/html/ 

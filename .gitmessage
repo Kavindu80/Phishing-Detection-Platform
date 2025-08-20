@@ -1,0 +1,66 @@
+# <type>(<scope>): <subject>
+#
+# <body>
+#
+# <footer>
+
+# Types:
+#   feat     (new feature for the user, not a new feature for build script)
+#   fix      (bug fix for the user, not a fix to a build script)
+#   docs     (changes to the documentation)
+#   style    (formatting, missing semi colons, etc; no production code change)
+#   refactor (refactoring production code, eg. renaming a variable)
+#   test     (adding missing tests, refactoring tests; no production code change)
+#   chore    (updating grunt tasks etc; no production code change)
+#   perf     (performance improvements)
+#   ci       (CI/CD related changes)
+#   build    (build system or external dependencies)
+#   revert   (revert a previous commit)
+
+# Scopes:
+#   frontend    (frontend related changes)
+#   backend     (backend related changes)
+#   extension   (chrome extension changes)
+#   ml          (machine learning model changes)
+#   security    (security related changes)
+#   deployment  (deployment related changes)
+#   docs        (documentation changes)
+#   tests       (test related changes)
+#   ci          (CI/CD changes)
+#   build       (build system changes)
+
+# Subject:
+#   - use imperative, present tense: "change" not "changed" nor "changes"
+#   - don't capitalize first letter
+#   - no dot (.) at the end
+
+# Body:
+#   - use imperative, present tense: "change" not "changed" nor "changes"
+#   - include motivation for the change and contrast with previous behavior
+
+# Footer:
+#   - reference issues being closed
+#   - BREAKING CHANGE: <description> (for breaking changes)
+
+# Examples:
+# feat(frontend): add user authentication component
+#
+# Add a new React component for user authentication with login/logout
+# functionality. This includes form validation and error handling.
+#
+# Closes #123
+# BREAKING CHANGE: Authentication API endpoints have changed
+
+# fix(backend): resolve memory leak in ML model loading
+#
+# Fix memory leak that occurred when loading large ML models by
+# implementing proper cleanup of model resources.
+#
+# Fixes #456
+
+# docs: update API documentation
+#
+# Update API documentation to reflect recent changes in authentication
+# endpoints and add examples for common use cases.
+#
+# Closes #789 

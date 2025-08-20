@@ -1,0 +1,165 @@
+[core]
+    editor = code --wait
+    autocrlf = input
+    safecrlf = warn
+    excludesfile = ~/.gitignore_global
+
+[init]
+    defaultBranch = main
+
+[user]
+    name = Phishing Detector Team
+    email = team@phishing-detector.com
+
+[commit]
+    template = .gitmessage
+    verbose = true
+    gpgsign = false
+
+[merge]
+    ff = false
+    log = true
+
+[rebase]
+    autosquash = true
+
+[pull]
+    rebase = true
+
+[push]
+    default = simple
+    followTags = true
+
+[alias]
+    # Basic aliases
+    st = status
+    co = checkout
+    br = branch
+    ci = commit
+    ca = commit -a
+    cm = commit -m
+    unstage = reset HEAD --
+    last = log -1 HEAD
+    visual = !gitk
+    
+    # Branch management
+    branch-name = "!git rev-parse --abbrev-ref HEAD"
+    branch-rename = "!git branch -m $1 $2"
+    branch-delete = "!git branch -d $1 && git push origin --delete $1"
+    
+    # Commit history
+    lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+    lga = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --all
+    hist = log --pretty=format:\"%h %ad | %s%d [%an]\" --graph --date=short
+    type = cat-file -t
+    dump = cat-file -p
+    
+    # Stashing
+    stash-list = stash list
+    stash-pop = stash pop
+    stash-drop = stash drop
+    
+    # Diff aliases
+    diff-staged = diff --cached
+    diff-unstaged = diff
+    diff-all = diff HEAD
+    
+    # File management
+    rm-cached = rm --cached
+    add-patch = add -p
+    
+    # Tag management
+    tag-list = tag -l
+    tag-delete = tag -d
+    tag-push = push origin --tags
+    
+    # Release management
+    release-create = "!bash scripts/release-manager.sh create"
+    release-list = "!bash scripts/release-manager.sh list"
+    release-notes = "!bash scripts/release-manager.sh notes"
+    release-publish = "!bash scripts/release-manager.sh publish"
+    
+    # Branch management
+    branch-create = "!bash scripts/branch-manager.sh create"
+    branch-merge = "!bash scripts/branch-manager.sh merge"
+    branch-cleanup = "!bash scripts/branch-manager.sh cleanup"
+    branch-status = "!bash scripts/branch-manager.sh status"
+    
+    # Changelog
+    changelog = "!bash scripts/update-changelog.sh"
+    
+    # Development workflow
+    dev-start = "!git checkout main && git pull origin main && bash scripts/branch-manager.sh create feature"
+    dev-finish = "!bash scripts/branch-manager.sh merge"
+    dev-cleanup = "!bash scripts/branch-manager.sh cleanup"
+    
+    # Code quality
+    lint = "!bash .git/hooks/pre-commit"
+    test = "!npm test && python -m pytest tests/"
+    build = "!npm run build"
+    
+    # Git hooks
+    hooks-install = "!chmod +x .git/hooks/*"
+    hooks-status = "!ls -la .git/hooks/"
+
+[color]
+    ui = auto
+    branch = auto
+    diff = auto
+    status = auto
+
+[color "branch"]
+    current = yellow reverse
+    local = yellow
+    remote = green
+
+[color "diff"]
+    meta = yellow bold
+    frag = magenta bold
+    old = red bold
+    new = green bold
+
+[color "status"]
+    added = yellow
+    changed = green
+    untracked = cyan
+
+[help]
+    autocorrect = 1
+
+[rerere]
+    enabled = true
+
+[gc]
+    auto = 256
+
+[receive]
+    denyNonFastForwards = true
+
+[transfer]
+    fsckObjects = true
+
+[fetch]
+    fsckObjects = true
+
+[repack]
+    writeBitmaps = true
+
+[maintenance]
+    auto = true
+    strategy = incremental
+
+[feature]
+    manyFiles = false
+
+[protocol]
+    version = 2
+
+[credential]
+    helper = cache
+
+[url "https://github.com/"]
+    insteadOf = git@github.com:
+
+[url "https://github.com/your-repo/phishing-detector.git"]
+    insteadOf = git@github.com:your-repo/phishing-detector.git 

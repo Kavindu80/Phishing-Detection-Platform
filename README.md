@@ -125,6 +125,7 @@ PhishGuard Platform
 
 ### Chrome Extension
 ![Chrome Extension](Readme_images/extention.png)
+
 *Browser extension providing real-time phishing detection while browsing*
 
 ## 🚀 Installation

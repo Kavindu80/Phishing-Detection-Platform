@@ -108,7 +108,7 @@ jobs:
     - name: Install frontend dependencies
       working-directory: ./frontend
       run: |
-        npm ci --legacy-peer-deps --no-audit
+        npm install --legacy-peer-deps --no-audit
 
     - name: Run frontend tests
       working-directory: ./frontend
@@ -241,7 +241,7 @@ jobs:
     - name: Install dependencies
       run: |
         cd backend && pip install -r requirements.txt
-        cd ../frontend && npm ci --legacy-peer-deps --no-audit
+        cd ../frontend && npm install --legacy-peer-deps --no-audit
 
     - name: Wait for MongoDB to be ready
       run: |

@@ -75,9 +75,6 @@ jobs:
         image: mongo:4.4
         ports:
           - 27017:27017
-        env:
-          MONGO_INITDB_ROOT_USERNAME: admin
-          MONGO_INITDB_ROOT_PASSWORD: password123
         options: >-
           --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok'"
           --health-interval 10s
@@ -107,7 +104,7 @@ jobs:
 
     - name: Install Node.js dependencies
       working-directory: ./frontend
-      run: npm ci --legacy-peer-deps --no-audit
+      run: npm install --legacy-peer-deps --no-audit
 
     - name: Create test directory if not exists
       working-directory: ./backend
@@ -123,7 +120,7 @@ jobs:
     - name: Run Python tests with coverage
       working-directory: ./backend
       env:
-        MONGO_URI: mongodb://admin:password123@localhost:27017/phishguard_test?authSource=admin
+        MONGO_URI: mongodb://localhost:27017/phishguard_test
         FLASK_ENV: testing
       run: |
         python -m pytest tests/ -v --cov=src --cov-report=xml --cov-report=html --cov-report=term-missing || echo "Python tests completed with warnings"
@@ -152,9 +149,6 @@ jobs:
         image: mongo:4.4
         ports:
           - 27017:27017
-        env:
-          MONGO_INITDB_ROOT_USERNAME: admin
-          MONGO_INITDB_ROOT_PASSWORD: password123
         options: >-
           --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok'"
           --health-interval 10s
@@ -185,7 +179,7 @@ jobs:
     - name: Start backend server
       working-directory: ./backend
       env:
-        MONGO_URI: mongodb://admin:password123@localhost:27017/phishguard_test?authSource=admin
+        MONGO_URI: mongodb://localhost:27017/phishguard_test
         FLASK_ENV: testing
       run: |
         python app.py &

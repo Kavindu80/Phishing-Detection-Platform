@@ -24,11 +24,15 @@ jobs:
         image: mongo:4.4
         ports:
           - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: password123
         options: >-
           --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok'"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+          --health-start-period 30s
 
     steps:
     - name: Checkout code
@@ -60,10 +64,15 @@ jobs:
         mkdir -p tests
         touch tests/__init__.py
 
+    - name: Wait for MongoDB to be ready
+      run: |
+        echo "Waiting for MongoDB to be ready..."
+        timeout 60 bash -c 'until mongosh --host localhost:27017 --eval "db.runCommand(\"ping\").ok" > /dev/null 2>&1; do sleep 2; done' || echo "MongoDB connection check failed, continuing..."
+
     - name: Run backend tests
       working-directory: ./backend
       env:
-        MONGO_URI: mongodb://localhost:27017/phishguard_test
+        MONGO_URI: mongodb://admin:password123@localhost:27017/phishguard_test?authSource=admin
         FLASK_ENV: testing
         SECRET_KEY: test-secret-key
         JWT_SECRET_KEY: test-jwt-secret
@@ -101,7 +110,7 @@ jobs:
 
     - name: Install frontend dependencies
       working-directory: ./frontend
-      run: npm ci
+      run: npm ci --legacy-peer-deps
 
     - name: Run frontend tests
       working-directory: ./frontend
@@ -210,6 +219,15 @@ jobs:
         image: mongo:4.4
         ports:
           - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: password123
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 30s
 
     steps:
     - name: Checkout code
@@ -228,12 +246,17 @@ jobs:
     - name: Install dependencies
       run: |
         cd backend && pip install -r requirements.txt
-        cd ../frontend && npm ci
+        cd ../frontend && npm ci --legacy-peer-deps
+
+    - name: Wait for MongoDB to be ready
+      run: |
+        echo "Waiting for MongoDB to be ready..."
+        timeout 60 bash -c 'until mongosh --host localhost:27017 --eval "db.runCommand(\"ping\").ok" > /dev/null 2>&1; do sleep 2; done' || echo "MongoDB connection check failed, continuing..."
 
     - name: Start backend server
       working-directory: ./backend
       env:
-        MONGO_URI: mongodb://localhost:27017/phishguard_test
+        MONGO_URI: mongodb://admin:password123@localhost:27017/phishguard_test?authSource=admin
         FLASK_ENV: testing
       run: |
         python app.py &

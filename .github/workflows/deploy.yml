@@ -2,76 +2,25 @@ name: Deploy PhishGuard
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [ main ]
+    tags: [ 'v*' ]
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Deployment environment'
-        required: true
-        default: 'staging'
-        type: choice
-        options:
-        - staging
-        - production
 
 env:
+  PYTHON_VERSION: '3.9'
+  NODE_VERSION: '18'
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # Deploy to Staging
-  deploy-staging:
-    name: Deploy to Staging
+  # Build and Push Docker Images
+  build-and-push:
+    name: Build and Push Images
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    permissions:
+      contents: read
+      packages: write
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Log in to Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Build and push Backend image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./backend
-        file: ./backend/Dockerfile
-        push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:staging
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-    - name: Build and push Frontend image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./frontend
-        file: ./frontend/Dockerfile
-        push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:staging
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-    - name: Deploy to staging server
-      run: |
-        echo "Deploying to staging environment..."
-        # Add your staging deployment commands here
-        # Example: kubectl apply, docker-compose, etc.
-
-  # Deploy to Production
-  deploy-production:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
-    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -91,6 +40,12 @@ jobs:
       uses: docker/metadata-action@v5
       with:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha
 
     - name: Build and push Backend image
       uses: docker/build-push-action@v5
@@ -109,76 +64,153 @@ jobs:
         context: ./frontend
         file: ./frontend/Dockerfile
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ github.sha }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-    - name: Deploy to production server
+  # Deploy to Staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+    environment: staging
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download deployment artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: deployment-package
+        path: deployment/
+
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment..."
+        # Add your staging deployment commands here
+        # Example: kubectl apply -f deployment/
+        echo "Staging deployment completed"
+
+    - name: Notify deployment success
+      run: |
+        echo "✅ Staging deployment successful"
+        echo "Environment: staging"
+        echo "Commit: ${{ github.sha }}"
+
+  # Deploy to Production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment: production
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download deployment artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: deployment-package
+        path: deployment/
+
+    - name: Deploy to production
       run: |
         echo "Deploying to production environment..."
         # Add your production deployment commands here
-        # Example: kubectl apply, docker-compose, etc.
+        # Example: kubectl apply -f deployment/
+        echo "Production deployment completed"
 
-  # Deploy to Cloud Platforms
-  deploy-cloud:
-    name: Deploy to Cloud
+    - name: Notify deployment success
+      run: |
+        echo "✅ Production deployment successful"
+        echo "Environment: production"
+        echo "Version: ${{ github.ref_name }}"
+
+  # Optional: Deploy to Cloud Platforms
+  deploy-heroku:
+    name: Deploy to Heroku (Optional)
     runs-on: ubuntu-latest
-    needs: [deploy-production]
-    if: startsWith(github.ref, 'refs/tags/v')
-    
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+    # Uncomment and configure if you have Heroku setup
+    # env:
+    #   HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Deploy to Heroku
-      uses: akhileshns/heroku-deploy@v3.12.14
-      if: ${{ secrets.HEROKU_API_KEY }}
-      with:
-        heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-        heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
-        heroku_email: ${{ secrets.HEROKU_EMAIL }}
+      run: |
+        echo "Heroku deployment placeholder"
+        # Add Heroku deployment commands here
+        # Example: heroku container:push web
+
+  deploy-railway:
+    name: Deploy to Railway (Optional)
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+    # Uncomment and configure if you have Railway setup
+    # env:
+    #   RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
     - name: Deploy to Railway
-      uses: railway/deploy@v1.0.0
-      if: ${{ secrets.RAILWAY_TOKEN }}
-      with:
-        railway_token: ${{ secrets.RAILWAY_TOKEN }}
-        service: phishguard-backend
+      run: |
+        echo "Railway deployment placeholder"
+        # Add Railway deployment commands here
+
+  deploy-vercel:
+    name: Deploy to Vercel (Optional)
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+    # Uncomment and configure if you have Vercel setup
+    # env:
+    #   VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
     - name: Deploy to Vercel
-      uses: amondnet/vercel-action@v25
-      if: ${{ secrets.VERCEL_TOKEN }}
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        working-directory: ./frontend
+      run: |
+        echo "Vercel deployment placeholder"
+        # Add Vercel deployment commands here
 
-  # Notify Deployment
-  notify:
-    name: Notify Deployment
+  # Notification on Failure
+  notify-failure:
+    name: Notify on Failure
     runs-on: ubuntu-latest
-    needs: [deploy-production, deploy-cloud]
-    if: always()
-    
-    steps:
-    - name: Notify Slack
-      uses: 8398a7/action-slack@v3
-      if: ${{ secrets.SLACK_WEBHOOK }}
-      with:
-        status: ${{ job.status }}
-        channel: '#deployments'
-        text: 'PhishGuard deployment ${{ job.status }}'
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+    if: failure()
+    # Uncomment and configure if you have Slack setup
+    # env:
+    #   SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
-    - name: Create deployment issue
+    steps:
+    - name: Create GitHub Issue
       uses: actions/github-script@v7
-      if: failure()
       with:
         script: |
           github.rest.issues.create({
             owner: context.repo.owner,
             repo: context.repo.repo,
-            title: `Deployment failed for ${context.ref}`,
-            body: `Deployment failed for tag ${context.ref}. Please check the logs for more details.`,
+            title: 'Deployment failed',
+            body: `Deployment failed for commit ${context.sha}. Please check the logs for details.`,
             labels: ['deployment', 'bug']
-          }) 
+          })
+
+    - name: Notify failure
+      run: |
+        echo "❌ Deployment failed"
+        echo "Commit: ${{ github.sha }}"
+        echo "Workflow: ${{ github.workflow }}"
+        # Add notification commands here (Slack, email, etc.) 

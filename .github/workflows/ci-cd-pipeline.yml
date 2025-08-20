@@ -24,9 +24,6 @@ jobs:
         image: mongo:4.4
         ports:
           - 27017:27017
-        env:
-          MONGO_INITDB_ROOT_USERNAME: admin
-          MONGO_INITDB_ROOT_PASSWORD: password123
         options: >-
           --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok'"
           --health-interval 10s
@@ -72,7 +69,7 @@ jobs:
     - name: Run backend tests
       working-directory: ./backend
       env:
-        MONGO_URI: mongodb://admin:password123@localhost:27017/phishguard_test?authSource=admin
+        MONGO_URI: mongodb://localhost:27017/phishguard_test
         FLASK_ENV: testing
         SECRET_KEY: test-secret-key
         JWT_SECRET_KEY: test-jwt-secret
@@ -220,9 +217,6 @@ jobs:
         image: mongo:4.4
         ports:
           - 27017:27017
-        env:
-          MONGO_INITDB_ROOT_USERNAME: admin
-          MONGO_INITDB_ROOT_PASSWORD: password123
         options: >-
           --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok'"
           --health-interval 10s
@@ -257,7 +251,7 @@ jobs:
     - name: Start backend server
       working-directory: ./backend
       env:
-        MONGO_URI: mongodb://admin:password123@localhost:27017/phishguard_test?authSource=admin
+        MONGO_URI: mongodb://localhost:27017/phishguard_test
         FLASK_ENV: testing
       run: |
         python app.py &

@@ -1,11 +1,13 @@
 # 🛡️ PhishGuard - Advanced Phishing Detection Platform
 
+<!-- CI/CD Test: Pipeline verification - 2025-01-20 -->
+
 <div align="center">
   <img src="Readme_images/logo.png" alt="PhishGuard Logo" width="200"/>
   
-  [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
-  [![React](https://img.shields.io/badge/React-19.1.1-blue.svg)](https://reactjs.org)
-  [![Flask](https://img.shields.io/badge/Flask-2.0+-green.svg)](https://flask.palletsprojects.com)
+  [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
+  [![React](https://img.shields.io/badge/React-18.2.0-blue.svg)](https://reactjs.org/)
+  [![Flask](https://img.shields.io/badge/Flask-2.2.3-green.svg)](https://flask.palletsprojects.com/)
   [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
   
   **A comprehensive, full-stack phishing detection platform using advanced machine learning and NLP techniques**

@@ -363,5 +363,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
   <p>Made with ❤️ by <strong>Kavindu Liyanage</strong></p>
-  <p>Final Year Project - SLTC Research University</p>
 </div> 

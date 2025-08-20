@@ -1,0 +1,386 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>PhishGuard Settings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+      * { box-sizing: border-box; }
+      
+      body { 
+        font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; 
+        margin: 0; 
+        padding: 0; 
+        background: #ffffff;
+        min-height: 100vh;
+        color: #000000;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 32px;
+        background: #000000;
+        color: #ffffff;
+        padding: 24px;
+        border-radius: 4px;
+      }
+
+      .header h1 {
+        font-size: 32px;
+        margin: 0 0 8px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+      }
+
+      .header .subtitle {
+        font-size: 16px;
+        opacity: 0.9;
+        font-weight: 300;
+      }
+
+      .card {
+        background: #ffffff;
+        border: 2px solid #000000;
+        border-radius: 4px;
+        padding: 32px;
+        margin-bottom: 24px;
+      }
+
+      .section-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #000000;
+        margin: 0 0 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #000000;
+      }
+
+      .form-group {
+        margin-bottom: 24px;
+      }
+
+      label {
+        display: block;
+        font-weight: 600;
+        color: #000000;
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      input[type="url"], textarea {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #000000;
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: inherit;
+        transition: all 0.2s;
+        background: #ffffff;
+        color: #000000;
+      }
+
+      input[type="url"]:focus, textarea:focus {
+        outline: none;
+        border-color: #333333;
+        background: #f8f8f8;
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        background: #f8f8f8;
+        border: 2px solid #000000;
+        border-radius: 4px;
+        transition: all 0.2s;
+      }
+
+      .checkbox-group:hover {
+        background: #f0f0f0;
+      }
+
+      .checkbox-group input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #000000;
+      }
+
+      .checkbox-group label {
+        margin: 0;
+        font-weight: 500;
+        cursor: pointer;
+        flex: 1;
+      }
+
+      textarea {
+        min-height: 120px;
+        resize: vertical;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 12px;
+      }
+
+      .help-text {
+        font-size: 12px;
+        color: #666666;
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid #cccccc;
+      }
+
+      button {
+        padding: 12px 24px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        border-radius: 4px;
+        border: 2px solid #000000;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 44px;
+      }
+
+      .btn-primary {
+        background: #000000;
+        color: #ffffff;
+      }
+
+      .btn-primary:hover {
+        background: #333333;
+      }
+
+      .btn-secondary {
+        background: #ffffff;
+        color: #000000;
+        border-color: #000000;
+      }
+
+      .btn-secondary:hover {
+        background: #f0f0f0;
+      }
+
+      .status-message {
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+        min-width: 200px;
+        justify-content: center;
+        border: 2px solid;
+      }
+
+      .status-message.success {
+        background: #f0f8f0;
+        color: #006600;
+        border-color: #00aa00;
+      }
+
+      .status-message.error {
+        background: #f8f0f0;
+        color: #cc0000;
+        border-color: #ff0000;
+      }
+
+      .connection-test {
+        background: #f8f8f8;
+        border: 2px solid #000000;
+        border-radius: 4px;
+        padding: 16px;
+        margin-top: 16px;
+      }
+
+      .connection-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        margin-bottom: 8px;
+      }
+
+      .status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+
+      .status-indicator.online {
+        background: #00aa00;
+      }
+
+      .status-indicator.offline {
+        background: #ff0000;
+      }
+
+      .status-indicator.testing {
+        background: #cc6600;
+        animation: pulse 1.5s infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+
+      .instructions {
+        background: #f8f8f8;
+        border-left: 4px solid #000000;
+        padding: 20px;
+        border-radius: 0 4px 4px 0;
+      }
+
+      .instructions h3 {
+        margin: 0 0 16px;
+        color: #000000;
+        font-size: 18px;
+      }
+
+      .instructions ol {
+        margin: 0;
+        padding-left: 20px;
+      }
+
+      .instructions li {
+        margin-bottom: 8px;
+        line-height: 1.5;
+      }
+
+      .instructions code {
+        background: #e0e0e0;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 12px;
+        border: 1px solid #cccccc;
+      }
+
+      .fade-in {
+        animation: fadeIn 0.3s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>
+          <i class="fas fa-shield-alt"></i>
+          PhishGuard
+        </h1>
+        <div class="subtitle">Extension Configuration</div>
+      </div>
+
+      <div class="card fade-in">
+        <div class="section-title">
+          <i class="fas fa-server"></i>
+          Backend Configuration
+        </div>
+
+        <div class="form-group">
+          <label for="backendUrl">Backend Server URL</label>
+          <input id="backendUrl" type="url" placeholder="http://127.0.0.1:5000" />
+          <div class="help-text">
+            <i class="fas fa-info-circle"></i>
+            Enter the full URL including protocol (http:// or https://)
+          </div>
+        </div>
+
+        <div class="connection-test" id="connectionTest" style="display: none;">
+          <div class="connection-status" id="connectionStatus">
+            <div class="status-indicator testing" id="statusIndicator"></div>
+            <span id="statusText">Testing connection...</span>
+          </div>
+          <div id="connectionDetails" style="font-size: 12px; color: #666666;"></div>
+        </div>
+      </div>
+
+      <div class="card fade-in">
+        <div class="section-title">
+          <i class="fas fa-key"></i>
+          Authentication Settings
+        </div>
+
+        <div class="form-group">
+          <div class="checkbox-group">
+            <input id="useAuth" type="checkbox" />
+            <label for="useAuth">Enable authenticated scans</label>
+            <i class="fas fa-question-circle" title="Authenticated scans save results to your account history"></i>
+          </div>
+          <div class="help-text">
+            <i class="fas fa-lightbulb"></i>
+            Enable this to save scan results to your account and access advanced features
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="authToken">JWT Access Token</label>
+          <textarea id="authToken" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></textarea>
+          <div class="help-text">
+            <i class="fas fa-shield-alt"></i>
+            Token is stored securely in Chrome's sync storage
+          </div>
+        </div>
+      </div>
+
+      <div class="card fade-in">
+        <div class="button-group">
+          <button id="save" class="btn-primary">
+            <i class="fas fa-save"></i>
+            Save Configuration
+          </button>
+          <button id="testConnection" class="btn-secondary">
+            <i class="fas fa-plug"></i>
+            Test Connection
+          </button>
+          <div id="status" class="status-message" style="display: none;"></div>
+        </div>
+      </div>
+
+      <div class="card instructions fade-in">
+        <h3><i class="fas fa-question-circle"></i> How to get your JWT Token</h3>
+        <ol>
+          <li>Open your PhishGuard web application and log in to your account</li>
+          <li>Open browser DevTools (F12) → Go to <strong>Application</strong> tab</li>
+          <li>In the sidebar, expand <strong>Local Storage</strong> → click on your domain</li>
+          <li>Look for a key like <code>auth_token</code> or <code>access_token</code></li>
+          <li>Copy the token value and paste it in the field above</li>
+          <li><strong>Alternative:</strong> Check the <strong>Network</strong> tab during login for the <code>/api/auth/login</code> response</li>
+        </ol>
+      </div>
+    </div>
+
+    <script src="options.js"></script>
+  </body>
+</html> 

@@ -359,13 +359,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Open Source Community** - Libraries and tools used
 - **Machine Learning Community** - Research and algorithms
 
-## 📞 Support
-
-For support and questions:
-- **Issues**: [GitHub Issues](https://github.com/Kavindu80/Phishing-Detection-Platform/issues)
-- **Email**: [Your Email]
-- **Documentation**: [Project Wiki]
-
 ---
 
 <div align="center">

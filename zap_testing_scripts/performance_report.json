@@ -1,0 +1,808 @@
+{
+  "timestamp": "2025-08-20T20:56:44.209536",
+  "system_info": {
+    "cpu_count": 12,
+    "memory_total": 16989204480,
+    "memory_available": 2075770880,
+    "disk_usage": 74.3
+  },
+  "health_endpoint": {
+    "endpoint": "/api/health",
+    "method": "GET",
+    "iterations": 20,
+    "successful_requests": 20,
+    "failed_requests": 0,
+    "errors": [],
+    "response_times": {
+      "min": 2026.550531387329,
+      "max": 2093.299150466919,
+      "mean": 2070.9216356277466,
+      "median": 2072.964310646057,
+      "std_dev": 14.032004038788953
+    },
+    "status_codes": [
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200
+    ],
+    "success_rate": 100.0
+  },
+  "authentication": {
+    "registration": {
+      "endpoint": "/api/auth/register",
+      "method": "POST",
+      "iterations": 10,
+      "successful_requests": 10,
+      "failed_requests": 0,
+      "errors": [],
+      "response_times": {
+        "min": 2058.720111846924,
+        "max": 2089.3988609313965,
+        "mean": 2076.4127492904663,
+        "median": 2076.701045036316,
+        "std_dev": 9.63286437156195
+      },
+      "status_codes": [
+        201,
+        201,
+        201,
+        201,
+        201,
+        201,
+        201,
+        201,
+        201,
+        201
+      ],
+      "success_rate": 100.0
+    },
+    "login": {
+      "endpoint": "/api/auth/login",
+      "method": "POST",
+      "iterations": 10,
+      "successful_requests": 10,
+      "failed_requests": 0,
+      "errors": [],
+      "response_times": {
+        "min": 2046.215295791626,
+        "max": 2080.0271034240723,
+        "mean": 2063.1516218185425,
+        "median": 2060.9066486358643,
+        "std_dev": 10.433199721702772
+      },
+      "status_codes": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "success_rate": 100.0
+    }
+  },
+  "scanning": {
+    "small": {
+      "endpoint": "/api/scan",
+      "method": "POST",
+      "iterations": 5,
+      "successful_requests": 5,
+      "failed_requests": 0,
+      "errors": [],
+      "response_times": {
+        "min": 2115.9932613372803,
+        "max": 2151.792049407959,
+        "mean": 2132.4522018432617,
+        "median": 2136.9333267211914,
+        "std_dev": 14.863579423297006
+      },
+      "status_codes": [
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "success_rate": 100.0
+    },
+    "medium": {
+      "endpoint": "/api/scan",
+      "method": "POST",
+      "iterations": 5,
+      "successful_requests": 5,
+      "failed_requests": 0,
+      "errors": [],
+      "response_times": {
+        "min": 2121.7029094696045,
+        "max": 2145.723342895508,
+        "mean": 2132.9238414764404,
+        "median": 2135.783910751343,
+        "std_dev": 10.011874506331955
+      },
+      "status_codes": [
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "success_rate": 100.0
+    },
+    "large": {
+      "endpoint": "/api/scan",
+      "method": "POST",
+      "iterations": 5,
+      "successful_requests": 5,
+      "failed_requests": 0,
+      "errors": [],
+      "response_times": {
+        "min": 2095.2987670898438,
+        "max": 2151.8547534942627,
+        "mean": 2125.1585960388184,
+        "median": 2122.6770877838135,
+        "std_dev": 24.572579125736556
+      },
+      "status_codes": [
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "success_rate": 100.0
+    }
+  },
+  "analytics": {
+    "basic_analytics": {
+      "endpoint": "/api/analytics",
+      "method": "GET",
+      "iterations": 5,
+      "successful_requests": 5,
+      "failed_requests": 0,
+      "errors": [],
+      "response_times": {
+        "min": 2062.4635219573975,
+        "max": 2092.831611633301,
+        "mean": 2074.5813846588135,
+        "median": 2073.091506958008,
+        "std_dev": 12.108207385670104
+      },
+      "status_codes": [
+        401,
+        401,
+        401,
+        401,
+        401
+      ],
+      "success_rate": 100.0
+    },
+    "analytics_export": {
+      "endpoint": "/api/analytics/export",
+      "method": "GET",
+      "iterations": 3,
+      "successful_requests": 3,
+      "failed_requests": 0,
+      "errors": [],
+      "response_times": {
+        "min": 2065.251111984253,
+        "max": 2089.0400409698486,
+        "mean": 2079.1964530944824,
+        "median": 2083.2982063293457,
+        "std_dev": 12.413563963270677
+      },
+      "status_codes": [
+        401,
+        401,
+        401
+      ],
+      "success_rate": 100.0
+    }
+  },
+  "concurrent_requests": {
+    "5_concurrent": {
+      "concurrency_level": 5,
+      "total_requests": 5,
+      "successful_requests": 5,
+      "failed_requests": 0,
+      "success_rate": 100.0,
+      "total_time_ms": 2108.3192825317383,
+      "requests_per_second": 2.371557307010842,
+      "response_times": {
+        "min": 2099.32279586792,
+        "max": 2106.320381164551,
+        "mean": 2103.1057357788086,
+        "median": 2103.283166885376
+      },
+      "responses": [
+        {
+          "request_id": 4,
+          "response_time": 2099.32279586792,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 3,
+          "response_time": 2101.3221740722656,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 0,
+          "response_time": 2106.320381164551,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 2,
+          "response_time": 2103.283166885376,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 1,
+          "response_time": 2105.2801609039307,
+          "status_code": 200,
+          "success": true
+        }
+      ]
+    },
+    "10_concurrent": {
+      "concurrency_level": 10,
+      "total_requests": 10,
+      "successful_requests": 10,
+      "failed_requests": 0,
+      "success_rate": 100.0,
+      "total_time_ms": 2136.569023132324,
+      "requests_per_second": 4.68040109714755,
+      "response_times": {
+        "min": 2107.5756549835205,
+        "max": 2131.5739154815674,
+        "mean": 2120.47221660614,
+        "median": 2122.0699548721313
+      },
+      "responses": [
+        {
+          "request_id": 8,
+          "response_time": 2107.5756549835205,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 0,
+          "response_time": 2122.570753097534,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 2,
+          "response_time": 2121.5691566467285,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 5,
+          "response_time": 2115.5710220336914,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 9,
+          "response_time": 2109.574794769287,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 7,
+          "response_time": 2114.5732402801514,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 1,
+          "response_time": 2125.570774078369,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 3,
+          "response_time": 2131.5739154815674,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 6,
+          "response_time": 2125.5722045898438,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 4,
+          "response_time": 2130.570650100708,
+          "status_code": 200,
+          "success": true
+        }
+      ]
+    },
+    "20_concurrent": {
+      "concurrency_level": 20,
+      "total_requests": 20,
+      "successful_requests": 20,
+      "failed_requests": 0,
+      "success_rate": 100.0,
+      "total_time_ms": 2169.445753097534,
+      "requests_per_second": 9.218944502965334,
+      "response_times": {
+        "min": 2112.661123275757,
+        "max": 2145.4436779022217,
+        "mean": 2130.318021774292,
+        "median": 2132.3779821395874
+      },
+      "responses": [
+        {
+          "request_id": 4,
+          "response_time": 2112.661123275757,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 0,
+          "response_time": 2119.657278060913,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 2,
+          "response_time": 2116.6555881500244,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 1,
+          "response_time": 2135.838508605957,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 12,
+          "response_time": 2118.8814640045166,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 10,
+          "response_time": 2123.8744258880615,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 11,
+          "response_time": 2122.8408813476562,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 7,
+          "response_time": 2131.8793296813965,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 3,
+          "response_time": 2137.8815174102783,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 13,
+          "response_time": 2119.8790073394775,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 6,
+          "response_time": 2132.8766345977783,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 5,
+          "response_time": 2135.878562927246,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 16,
+          "response_time": 2128.4468173980713,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 19,
+          "response_time": 2124.445676803589,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 8,
+          "response_time": 2145.439624786377,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 14,
+          "response_time": 2135.442018508911,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 9,
+          "response_time": 2145.4436779022217,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 15,
+          "response_time": 2142.444133758545,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 17,
+          "response_time": 2138.4482383728027,
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "request_id": 18,
+          "response_time": 2137.4459266662598,
+          "status_code": 200,
+          "success": true
+        }
+      ]
+    },
+    "50_concurrent": {
+      "concurrency_level": 50,
+      "total_requests": 50,
+      "successful_requests": 0,
+      "failed_requests": 50,
+      "success_rate": 0.0,
+      "total_time_ms": 2271.7416286468506,
+      "requests_per_second": 22.009545174282078,
+      "response_times": {
+        "min": 0,
+        "max": 0,
+        "mean": 0,
+        "median": 0
+      },
+      "responses": [
+        {
+          "request_id": 1,
+          "response_time": 2056.912422180176,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 2,
+          "response_time": 2054.9099445343018,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 3,
+          "response_time": 2052.921772003174,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 0,
+          "response_time": 2071.913957595825,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 4,
+          "response_time": 2065.8767223358154,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 10,
+          "response_time": 2062.915086746216,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 6,
+          "response_time": 2078.9105892181396,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 5,
+          "response_time": 2082.913875579834,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 8,
+          "response_time": 2080.909252166748,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 7,
+          "response_time": 2090.914249420166,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 9,
+          "response_time": 2092.9136276245117,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 21,
+          "response_time": 2078.921318054199,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 26,
+          "response_time": 2078.9177417755127,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 13,
+          "response_time": 2102.916717529297,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 24,
+          "response_time": 2089.9107456207275,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 28,
+          "response_time": 2093.9204692840576,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 11,
+          "response_time": 2126.913547515869,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 12,
+          "response_time": 2131.9150924682617,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 19,
+          "response_time": 2119.917154312134,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 22,
+          "response_time": 2126.9166469573975,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 14,
+          "response_time": 2141.9143676757812,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 18,
+          "response_time": 2142.9190635681152,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 17,
+          "response_time": 2149.9156951904297,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 20,
+          "response_time": 2148.9193439483643,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 16,
+          "response_time": 2160.912036895752,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 25,
+          "response_time": 2154.432773590088,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 15,
+          "response_time": 2175.428867340088,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 23,
+          "response_time": 2168.4277057647705,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 29,
+          "response_time": 2159.430503845215,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 27,
+          "response_time": 2173.433780670166,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 33,
+          "response_time": 2165.4343605041504,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 38,
+          "response_time": 2164.6430492401123,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 30,
+          "response_time": 2179.189920425415,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 35,
+          "response_time": 2174.0283966064453,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 34,
+          "response_time": 2183.7406158447266,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 31,
+          "response_time": 2189.7411346435547,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 36,
+          "response_time": 2182.741165161133,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 32,
+          "response_time": 2190.739870071411,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 37,
+          "response_time": 2186.7408752441406,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 41,
+          "response_time": 2186.7408752441406,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 49,
+          "response_time": 2175.743818283081,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 39,
+          "response_time": 2194.7436332702637,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 44,
+          "response_time": 2188.736915588379,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 40,
+          "response_time": 2196.7432498931885,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 45,
+          "response_time": 2188.764810562134,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 43,
+          "response_time": 2193.7811374664307,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 47,
+          "response_time": 2187.7806186676025,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 46,
+          "response_time": 2188.7779235839844,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 42,
+          "response_time": 2194.7813034057617,
+          "status_code": 429,
+          "success": false
+        },
+        {
+          "request_id": 48,
+          "response_time": 2185.781955718994,
+          "status_code": 429,
+          "success": false
+        }
+      ]
+    }
+  },
+  "memory_usage": {
+    "initial_memory_mb": 14394.00390625,
+    "final_memory_mb": 14289.5703125,
+    "memory_increase_mb": -104.43359375,
+    "memory_increase_percent": -0.7255353995329543
+  }
+}

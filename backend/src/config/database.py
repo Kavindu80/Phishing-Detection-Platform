@@ -21,17 +21,29 @@ class Database:
         return cls._instance
     
     def _connect(self):
-        """Connect to MongoDB"""
+        """Connect to MongoDB with connection pooling"""
         config = get_config()
         try:
-            self._client = MongoClient(config.MONGO_URI)
+            # Configure connection pooling for better performance
+            self._client = MongoClient(
+                config.MONGO_URI,
+                maxPoolSize=50,  # Maximum number of connections in the pool
+                minPoolSize=10,  # Minimum number of connections in the pool
+                maxIdleTimeMS=30000,  # Maximum time a connection can remain idle
+                serverSelectionTimeoutMS=5000,  # Timeout for server selection
+                connectTimeoutMS=10000,  # Timeout for connection
+                socketTimeoutMS=10000,  # Timeout for socket operations
+                retryWrites=True,  # Enable retry for write operations
+                retryReads=True   # Enable retry for read operations
+            )
+            
             # Extract database name from URI
             db_name = config.MONGO_URI.split('/')[-1]
             self._db = self._client[db_name]
             
             # Test the connection
             self._client.admin.command('ping')
-            logger.info(f"Successfully connected to MongoDB: {config.MONGO_URI}")
+            logger.info(f"Successfully connected to MongoDB with connection pooling: {config.MONGO_URI}")
             
             # Create indexes for collections
             self._create_indexes()

@@ -1,0 +1,29 @@
+PhishGuard Performance Testing Summary
+========================================
+Test Date: 2025-08-20T20:56:44.209536
+
+Health Endpoint:
+  Average Response Time: 2070.92ms
+  Success Rate: 100.0%
+
+Authentication:
+  Login Average: 2063.15ms
+
+Email Scanning:
+  Small Email: 2132.45ms
+  Medium Email: 2132.92ms
+  Large Email: 2125.16ms
+
+Concurrent Load Testing:
+  5 concurrent: 2.4 req/s
+  10 concurrent: 4.7 req/s
+  20 concurrent: 9.2 req/s
+  50 concurrent: 22.0 req/s
+
+Memory Usage:
+  Memory Increase: -104.43MB (-0.7%)
+
+Performance Recommendations:
+  WARNING - Health endpoint is slow (>1s)
+  WARNING - Login is slow (>2s)
+  WARNING - High failure rate with 50 concurrent requests

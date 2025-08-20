@@ -1,0 +1,318 @@
+name: Quality Assurance
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Code Quality Checks
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install Python quality tools
+      run: |
+        pip install black flake8 isort mypy pylint
+
+    - name: Install Node.js quality tools
+      working-directory: ./frontend
+      run: |
+        npm install -g eslint prettier
+
+    - name: Run Black (Python code formatting)
+      run: |
+        black --check --diff backend/src/
+
+    - name: Run isort (Python import sorting)
+      run: |
+        isort --check-only --diff backend/src/
+
+    - name: Run Flake8 (Python linting)
+      run: |
+        flake8 backend/src/ --max-line-length=88 --extend-ignore=E203,W503
+
+    - name: Run MyPy (Python type checking)
+      run: |
+        mypy backend/src/ --ignore-missing-imports
+
+    - name: Run Pylint (Python code analysis)
+      run: |
+        pylint backend/src/ --disable=C0114,C0116
+
+    - name: Run ESLint (JavaScript linting)
+      working-directory: ./frontend
+      run: |
+        npx eslint src/ --ext .js,.jsx,.ts,.tsx
+
+    - name: Run Prettier (JavaScript formatting)
+      working-directory: ./frontend
+      run: |
+        npx prettier --check src/
+
+  # Test Coverage
+  test-coverage:
+    name: Test Coverage
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:4.4
+        ports:
+          - 27017:27017
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install Python dependencies
+      working-directory: ./backend
+      run: |
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-mock
+
+    - name: Install Node.js dependencies
+      working-directory: ./frontend
+      run: npm ci
+
+    - name: Run Python tests with coverage
+      working-directory: ./backend
+      env:
+        MONGO_URI: mongodb://localhost:27017/phishguard_test
+        FLASK_ENV: testing
+      run: |
+        python -m pytest tests/ -v --cov=src --cov-report=xml --cov-report=html --cov-report=term-missing
+
+    - name: Run JavaScript tests
+      working-directory: ./frontend
+      run: |
+        npm test -- --coverage --watchAll=false
+
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage.xml
+        flags: backend
+        name: backend-coverage
+
+    - name: Upload coverage artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-reports
+        path: |
+          backend/htmlcov/
+          frontend/coverage/
+
+  # Performance Testing
+  performance:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    needs: [test-coverage]
+    
+    services:
+      mongodb:
+        image: mongo:4.4
+        ports:
+          - 27017:27017
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      working-directory: ./backend
+      run: |
+        pip install -r requirements.txt
+        pip install locust
+
+    - name: Start backend server
+      working-directory: ./backend
+      env:
+        MONGO_URI: mongodb://localhost:27017/phishguard_test
+        FLASK_ENV: testing
+      run: |
+        python app.py &
+        sleep 10
+
+    - name: Run performance tests
+      working-directory: ./backend
+      run: |
+        python -m locust -f performance_tests/locustfile.py --headless --users 10 --spawn-rate 2 --run-time 30s --html performance-report.html
+
+    - name: Upload performance report
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-report
+        path: backend/performance-report.html
+
+  # Documentation Quality
+  docs-quality:
+    name: Documentation Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install documentation tools
+      run: |
+        pip install sphinx sphinx-rtd-theme doc8
+
+    - name: Check README links
+      run: |
+        pip install markdown-link-check
+        find . -name "*.md" -exec markdown-link-check {} \;
+
+    - name: Check Python docstrings
+      working-directory: ./backend
+      run: |
+        python -c "
+        import ast
+        import os
+        
+        def check_docstrings(directory):
+            issues = []
+            for root, dirs, files in os.walk(directory):
+                for file in files:
+                    if file.endswith('.py'):
+                        filepath = os.path.join(root, file)
+                        try:
+                            with open(filepath, 'r') as f:
+                                tree = ast.parse(f.read())
+                            
+                            for node in ast.walk(tree):
+                                if isinstance(node, (ast.FunctionDef, ast.ClassDef, ast.Module)):
+                                    if ast.get_docstring(node) is None:
+                                        issues.append(f'{filepath}:{node.lineno} - Missing docstring')
+                        except:
+                            pass
+            return issues
+        
+        issues = check_docstrings('src')
+        if issues:
+            print('Docstring issues found:')
+            for issue in issues:
+                print(issue)
+            exit(1)
+        else:
+            print('All functions and classes have docstrings')
+        "
+
+    - name: Generate API documentation
+      working-directory: ./backend
+      run: |
+        sphinx-apidoc -o docs/source src/
+        sphinx-build -b html docs/source docs/build/html
+
+    - name: Upload documentation
+      uses: actions/upload-artifact@v3
+      with:
+        name: api-documentation
+        path: backend/docs/build/html/
+
+  # Quality Report
+  quality-report:
+    name: Generate Quality Report
+    runs-on: ubuntu-latest
+    needs: [code-quality, test-coverage, performance, docs-quality]
+    if: always()
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download all reports
+      uses: actions/download-artifact@v3
+      with:
+        path: quality-reports
+
+    - name: Generate quality summary
+      run: |
+        echo "# Quality Assurance Report" > quality-summary.md
+        echo "Generated on: $(date)" >> quality-summary.md
+        echo "" >> quality-summary.md
+        
+        echo "## Code Quality Status" >> quality-summary.md
+        if [ "${{ needs.code-quality.result }}" == "success" ]; then
+          echo "✅ All code quality checks passed" >> quality-summary.md
+        else
+          echo "❌ Code quality checks failed" >> quality-summary.md
+        fi
+        
+        echo "" >> quality-summary.md
+        echo "## Test Coverage Status" >> quality-summary.md
+        if [ "${{ needs.test-coverage.result }}" == "success" ]; then
+          echo "✅ Test coverage requirements met" >> quality-summary.md
+        else
+          echo "❌ Test coverage requirements not met" >> quality-summary.md
+        fi
+        
+        echo "" >> quality-summary.md
+        echo "## Performance Status" >> quality-summary.md
+        if [ "${{ needs.performance.result }}" == "success" ]; then
+          echo "✅ Performance tests passed" >> quality-summary.md
+        else
+          echo "❌ Performance tests failed" >> quality-summary.md
+        fi
+        
+        echo "" >> quality-summary.md
+        echo "## Documentation Status" >> quality-summary.md
+        if [ "${{ needs.docs-quality.result }}" == "success" ]; then
+          echo "✅ Documentation quality checks passed" >> quality-summary.md
+        else
+          echo "❌ Documentation quality checks failed" >> quality-summary.md
+        fi
+
+    - name: Upload quality summary
+      uses: actions/upload-artifact@v3
+      with:
+        name: quality-summary
+        path: quality-summary.md
+
+    - name: Create quality issue on failure
+      uses: actions/github-script@v7
+      if: failure()
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: 'Quality checks failed',
+            body: 'Quality assurance checks failed. Please review the quality reports for details.',
+            labels: ['quality', 'bug']
+          }) 

@@ -4,7 +4,6 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 import logging
 
-# Add the current directory to the path so imports work correctly
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 try:
@@ -15,7 +14,7 @@ try:
     from src.routes.analytics_routes import analytics_bp
     from src.routes.inbox_routes import inbox_bp
 except ModuleNotFoundError:
-    # Alternative import path when running from the backend directory
+
     from src.extensions import bcrypt, jwt
     from src.config.config import get_config
     from src.routes.auth_routes import auth_bp
@@ -34,15 +33,14 @@ def create_app(config_name=None):
     # Load configuration
     config = get_config(config_name)
     app.config.from_object(config)
-    
-    # Initialize extensions with app
+
     # Configure CORS with more detailed settings
     CORS(app, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"], 
                                     "allow_headers": ["Content-Type", "Authorization"]}})
     bcrypt.init_app(app)
     jwt.init_app(app)
     
-    # Register blueprints
+
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(scan_bp, url_prefix='/api')
     app.register_blueprint(analytics_bp, url_prefix='/api')

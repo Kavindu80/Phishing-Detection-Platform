@@ -22,7 +22,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/phishing-detection-platform
+  IMAGE_NAME: kavindu80/phishing-detection-platform
   BLUE_ENV: blue
   GREEN_ENV: green
   PRODUCTION_DOMAIN: phishguard.yourdomain.com
@@ -88,8 +88,8 @@ jobs:
         file: ./backend/Dockerfile
         push: true
         tags: |
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ github.sha }}
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:latest
+          ghcr.io/kavindu80/phishing-detection-platform-backend:${{ github.sha }}
+          ghcr.io/kavindu80/phishing-detection-platform-backend:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
       continue-on-error: true
@@ -101,8 +101,8 @@ jobs:
         file: ./frontend/Dockerfile
         push: true
         tags: |
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ github.sha }}
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
+          ghcr.io/kavindu80/phishing-detection-platform-frontend:${{ github.sha }}
+          ghcr.io/kavindu80/phishing-detection-platform-frontend:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
       continue-on-error: true

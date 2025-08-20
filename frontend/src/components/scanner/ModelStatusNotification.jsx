@@ -31,7 +31,7 @@ const ModelStatusNotification = () => {
     return null;
   }
 
-  // If model is working properly, don't show anything
+
   if (modelStatus.model_loaded && !modelStatus.fallback_mode) {
     return null;
   }

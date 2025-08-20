@@ -107,7 +107,7 @@ jobs:
 
     - name: Install Node.js dependencies
       working-directory: ./frontend
-      run: npm ci --legacy-peer-deps
+      run: npm ci --legacy-peer-deps --no-audit
 
     - name: Create test directory if not exists
       working-directory: ./backend

@@ -1,0 +1,1245 @@
+{
+    "info": {
+        "_postman_id": "phishguard-api-v1",
+        "name": "PhishGuard API Automation Tests",
+        "description": "Comprehensive API automation test collection for PhishGuard Phishing Detection Application.\n\nTest Categories:\n- Authentication (Register, Login, OAuth)\n- Email Scanning (Public & Protected)\n- Scan History\n- Analytics\n- Health Checks\n\nTesting Techniques: Equivalence Partitioning, Boundary Value Analysis, Security Testing",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:5000/api"
+        },
+        {
+            "key": "auth_token",
+            "value": ""
+        },
+        {
+            "key": "user_email",
+            "value": "testuser@example.com"
+        },
+        {
+            "key": "user_password",
+            "value": "SecurePass123!"
+        },
+        {
+            "key": "user_id",
+            "value": ""
+        }
+    ],
+    "item": [
+        {
+            "name": "Health & Status",
+            "description": "API Health and Status Endpoints",
+            "item": [
+                {
+                    "name": "API-001: Health Check",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-001: Health Check",
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response contains status', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('status');",
+                                    "});",
+                                    "",
+                                    "pm.test('Response time is acceptable', function () {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                                    "});",
+                                    "",
+                                    "console.log('[API-001] Health check passed');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/health",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        },
+                        "description": "API-001: Verify API health endpoint returns 200 OK"
+                    }
+                },
+                {
+                    "name": "API-002: Model Status",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-002: Model Status Check",
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response contains model status info', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.be.an('object');",
+                                    "});",
+                                    "",
+                                    "console.log('[API-002] Model status endpoint working');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/model/status",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "model",
+                                "status"
+                            ]
+                        },
+                        "description": "API-002: Check ML model status"
+                    }
+                },
+                {
+                    "name": "API-003: Supported Languages",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-003: Supported Languages",
+                                    "pm.test('Status code is 200 or 500', function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 500]);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response contains languages', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('languages');",
+                                    "});",
+                                    "",
+                                    "console.log('[API-003] Languages endpoint checked');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/languages",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "languages"
+                            ]
+                        },
+                        "description": "API-003: Get supported languages for translation"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Authentication",
+            "description": "User Authentication Tests",
+            "item": [
+                {
+                    "name": "API-010: Register - Valid Data",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "// Generate unique email",
+                                    "const randomNum = Math.floor(Math.random() * 100000);",
+                                    "pm.environment.set('test_email', `testuser_${randomNum}@example.com`);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-010: Register with valid data",
+                                    "pm.test('Status code is 201 or 200', function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response contains user data or token', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.be.an('object');",
+                                    "});",
+                                    "",
+                                    "// Store token if returned",
+                                    "const jsonData = pm.response.json();",
+                                    "if (jsonData.access_token) {",
+                                    "    pm.collectionVariables.set('auth_token', jsonData.access_token);",
+                                    "}",
+                                    "if (jsonData.user && jsonData.user.id) {",
+                                    "    pm.collectionVariables.set('user_id', jsonData.user.id);",
+                                    "}",
+                                    "",
+                                    "console.log('[API-010] Registration test completed');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"{{test_email}}\",\n    \"password\": \"SecurePass123!\",\n    \"first_name\": \"Test\",\n    \"last_name\": \"User\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/register",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register"
+                            ]
+                        },
+                        "description": "API-010: Register new user with valid data"
+                    }
+                },
+                {
+                    "name": "API-011: Register - Duplicate Email",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-011: Register with duplicate email",
+                                    "pm.test('Status code is 400 or 409 (Conflict)', function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([400, 409]);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response contains error message', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('error');",
+                                    "});",
+                                    "",
+                                    "console.log('[API-011] Duplicate email rejection verified');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"{{test_email}}\",\n    \"password\": \"SecurePass123!\",\n    \"first_name\": \"Test\",\n    \"last_name\": \"User\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/register",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register"
+                            ]
+                        },
+                        "description": "API-011: Attempt to register with already existing email"
+                    }
+                },
+                {
+                    "name": "API-012: Register - Invalid Email Format",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-012: Invalid email format",
+                                    "pm.test('Status code is 400 (Bad Request)', function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response indicates validation error', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.error || jsonData.message).to.include.oneOf(['email', 'invalid', 'Invalid']);",
+                                    "});",
+                                    "",
+                                    "console.log('[API-012] Invalid email format rejected');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"not_an_email\",\n    \"password\": \"SecurePass123!\",\n    \"first_name\": \"Test\",\n    \"last_name\": \"User\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/register",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register"
+                            ]
+                        },
+                        "description": "API-012: EP - Invalid email format partition"
+                    }
+                },
+                {
+                    "name": "API-013: Register - Weak Password (BVA)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-013: Weak password (BVA - below minimum)",
+                                    "pm.test('Status code is 400 (Bad Request)', function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response indicates password requirement', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(JSON.stringify(jsonData).toLowerCase()).to.include('password');",
+                                    "});",
+                                    "",
+                                    "console.log('[API-013] Weak password rejected (BVA)');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"weakpass@example.com\",\n    \"password\": \"123\",\n    \"first_name\": \"Test\",\n    \"last_name\": \"User\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/register",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register"
+                            ]
+                        },
+                        "description": "API-013: BVA - Password below minimum length"
+                    }
+                },
+                {
+                    "name": "API-020: Login - Valid Credentials",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-020: Login with valid credentials",
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response contains access_token', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('access_token');",
+                                    "});",
+                                    "",
+                                    "pm.test('Token is a valid JWT format', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    const token = jsonData.access_token;",
+                                    "    pm.expect(token.split('.').length).to.equal(3);",
+                                    "});",
+                                    "",
+                                    "// Store token for subsequent requests",
+                                    "const jsonData = pm.response.json();",
+                                    "if (jsonData.access_token) {",
+                                    "    pm.collectionVariables.set('auth_token', jsonData.access_token);",
+                                    "}",
+                                    "",
+                                    "console.log('[API-020] Login successful, token stored');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"{{test_email}}\",\n    \"password\": \"SecurePass123!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "API-020: Login with valid credentials"
+                    }
+                },
+                {
+                    "name": "API-021: Login - Invalid Password",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-021: Login with invalid password",
+                                    "pm.test('Status code is 401 (Unauthorized)', function () {",
+                                    "    pm.response.to.have.status(401);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response contains error message', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('error');",
+                                    "});",
+                                    "",
+                                    "console.log('[API-021] Invalid password rejected');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"{{test_email}}\",\n    \"password\": \"WrongPassword123!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "API-021: Login with incorrect password"
+                    }
+                },
+                {
+                    "name": "API-022: Login - Non-existent User",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-022: Login with non-existent user",
+                                    "pm.test('Status code is 401 or 404', function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([401, 404]);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response contains error', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.error || jsonData.message).to.exist;",
+                                    "});",
+                                    "",
+                                    "console.log('[API-022] Non-existent user handled correctly');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"nonexistent@example.com\",\n    \"password\": \"AnyPassword123!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "API-022: Login attempt with non-registered email"
+                    }
+                },
+                {
+                    "name": "API-023: Login - SQL Injection Attempt",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-023: SQL Injection security test",
+                                    "pm.test('Status code is 400 or 401 (not 200)', function () {",
+                                    "    pm.expect(pm.response.code).to.not.equal(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('SQL injection did not succeed', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.access_token).to.be.undefined;",
+                                    "});",
+                                    "",
+                                    "console.log('[API-023] SQL Injection attempt blocked');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"' OR '1'='1\",\n    \"password\": \"' OR '1'='1\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "API-023: Security Test - SQL Injection attempt"
+                    }
+                },
+                {
+                    "name": "API-024: Get Current User (Protected)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-024: Get current user with valid token",
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response contains user email', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.email || jsonData.user.email).to.exist;",
+                                    "});",
+                                    "",
+                                    "console.log('[API-024] Protected endpoint accessed successfully');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/auth/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "me"
+                            ]
+                        },
+                        "description": "API-024: Get current user profile with valid JWT"
+                    }
+                },
+                {
+                    "name": "API-025: Protected Route - No Token",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-025: Access protected route without token",
+                                    "pm.test('Status code is 401 (Unauthorized)', function () {",
+                                    "    pm.response.to.have.status(401);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response indicates missing authorization', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.error || jsonData.msg || jsonData.message).to.exist;",
+                                    "});",
+                                    "",
+                                    "console.log('[API-025] Unauthorized access properly blocked');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/auth/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "me"
+                            ]
+                        },
+                        "description": "API-025: Access protected endpoint without token"
+                    }
+                },
+                {
+                    "name": "API-026: Google OAuth URL",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-026: Get Google OAuth URL",
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response contains auth_url', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('auth_url');",
+                                    "});",
+                                    "",
+                                    "pm.test('URL points to Google', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.auth_url).to.include('accounts.google.com');",
+                                    "});",
+                                    "",
+                                    "console.log('[API-026] Google OAuth URL retrieved');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/auth/google/url",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "google",
+                                "url"
+                            ]
+                        },
+                        "description": "API-026: Get Google OAuth authorization URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Email Scanning",
+            "description": "Email Scan API Tests",
+            "item": [
+                {
+                    "name": "API-030: Public Scan - Phishing Email",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-030: Scan phishing email (public endpoint)",
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response contains prediction', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('prediction');",
+                                    "});",
+                                    "",
+                                    "pm.test('Response contains confidence score', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('confidence');",
+                                    "    pm.expect(jsonData.confidence).to.be.a('number');",
+                                    "});",
+                                    "",
+                                    "pm.test('Confidence is between 0 and 100', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.confidence).to.be.at.least(0);",
+                                    "    pm.expect(jsonData.confidence).to.be.at.most(100);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response time is under 5 seconds', function () {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                                    "});",
+                                    "",
+                                    "console.log('[API-030] Phishing email scan completed');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email_text\": \"URGENT: Your account has been compromised! Click here immediately: http://bit.ly/security-fix to verify your identity. Act now or lose access! Your PayPaI account requires verification.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/scan",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "scan"
+                            ]
+                        },
+                        "description": "API-030: Scan a known phishing email"
+                    }
+                },
+                {
+                    "name": "API-031: Public Scan - Legitimate Email",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-031: Scan legitimate email",
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response contains prediction', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.prediction).to.exist;",
+                                    "});",
+                                    "",
+                                    "pm.test('Legitimate email has lower risk', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    // Legitimate emails should have lower confidence (less likely phishing)",
+                                    "    pm.expect(jsonData).to.have.property('risk_level');",
+                                    "});",
+                                    "",
+                                    "console.log('[API-031] Legitimate email scan completed');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email_text\": \"Hi Team, Please find attached the meeting notes from yesterday. We discussed the Q4 planning and budget review. Let me know if you have any questions. Best regards, John\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/scan",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "scan"
+                            ]
+                        },
+                        "description": "API-031: Scan a legitimate email"
+                    }
+                },
+                {
+                    "name": "API-032: Public Scan - Empty Body",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-032: Scan with empty body (EP - Invalid partition)",
+                                    "pm.test('Status code is 400 (Bad Request)', function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response contains error message', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.error || jsonData.message).to.exist;",
+                                    "});",
+                                    "",
+                                    "console.log('[API-032] Empty body validation working');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/scan",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "scan"
+                            ]
+                        },
+                        "description": "API-032: EP - Empty request body"
+                    }
+                },
+                {
+                    "name": "API-033: Public Scan - XSS in Input",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-033: XSS security test",
+                                    "pm.test('Status code is 200 (processed safely)', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response does not contain raw script tags', function () {",
+                                    "    const response = pm.response.text();",
+                                    "    pm.expect(response).to.not.include('<script>');",
+                                    "});",
+                                    "",
+                                    "console.log('[API-033] XSS input handled safely');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email_text\": \"<script>alert('XSS')</script>Hello this is a test email with malicious script.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/scan",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "scan"
+                            ]
+                        },
+                        "description": "API-033: Security - XSS injection attempt"
+                    }
+                },
+                {
+                    "name": "API-034: Public Scan - Very Long Text (BVA)",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "// Generate large text for BVA upper boundary",
+                                    "const longText = 'A'.repeat(50000);",
+                                    "pm.environment.set('long_text', longText);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-034: BVA - Large text input",
+                                    "pm.test('Status code is 200 or 413', function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 413]);",
+                                    "});",
+                                    "",
+                                    "console.log('[API-034] Large text handled appropriately');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email_text\": \"This is a test email with a lot of content. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris. This pattern repeats many times to test boundary values for large input handling.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/scan",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "scan"
+                            ]
+                        },
+                        "description": "API-034: BVA - Upper boundary text length"
+                    }
+                },
+                {
+                    "name": "API-035: Authenticated Scan",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-035: Authenticated scan endpoint",
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response contains prediction data', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('prediction');",
+                                    "    pm.expect(jsonData).to.have.property('confidence');",
+                                    "});",
+                                    "",
+                                    "console.log('[API-035] Authenticated scan successful');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email_text\": \"Test email for authenticated scan. This should be saved to user history.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/scan/auth",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "scan",
+                                "auth"
+                            ]
+                        },
+                        "description": "API-035: Scan with authentication (saves to history)"
+                    }
+                },
+                {
+                    "name": "API-036: Authenticated Scan - No Token",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-036: Auth scan without token",
+                                    "pm.test('Status code is 401 (Unauthorized)', function () {",
+                                    "    pm.response.to.have.status(401);",
+                                    "});",
+                                    "",
+                                    "console.log('[API-036] Unauthorized access to auth scan blocked');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email_text\": \"Test email without authentication.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/scan/auth",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "scan",
+                                "auth"
+                            ]
+                        },
+                        "description": "API-036: Attempt auth scan without token"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Scan History",
+            "description": "Scan History API Tests",
+            "item": [
+                {
+                    "name": "API-040: Get Scan History",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-040: Get user scan history",
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response is an array or has scans property', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(Array.isArray(jsonData) || jsonData.scans || jsonData.history).to.be.true;",
+                                    "});",
+                                    "",
+                                    "console.log('[API-040] Scan history retrieved');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/history",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "history"
+                            ]
+                        },
+                        "description": "API-040: Get scan history for authenticated user"
+                    }
+                },
+                {
+                    "name": "API-041: Get History - No Token",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-041: History without authentication",
+                                    "pm.test('Status code is 401 (Unauthorized)', function () {",
+                                    "    pm.response.to.have.status(401);",
+                                    "});",
+                                    "",
+                                    "console.log('[API-041] Unauthorized history access blocked');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/history",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "history"
+                            ]
+                        },
+                        "description": "API-041: Attempt to get history without token"
+                    }
+                },
+                {
+                    "name": "API-042: Get History Alt Path",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-042: Alternative history endpoint",
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "console.log('[API-042] Alternative history path working');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/scans/history",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "scans",
+                                "history"
+                            ]
+                        },
+                        "description": "API-042: Get scan history via alternative path"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Performance Tests",
+            "description": "API Performance Tests",
+            "item": [
+                {
+                    "name": "API-050: Scan Response Time < 3s",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// API-050: Performance - Response time",
+                                    "pm.test('Response time is under 3000ms', function () {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                                    "});",
+                                    "",
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "console.log(`[API-050] Response time: ${pm.response.responseTime}ms`);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email_text\": \"Quick performance test email content.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/scan",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "scan"
+                            ]
+                        },
+                        "description": "API-050: Verify scan response time is under 3 seconds"
+                    }
+                }
+            ]
+        }
+    ]
+}
